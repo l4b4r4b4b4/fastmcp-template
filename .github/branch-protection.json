@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "_comment": "Branch protection rules for main branch. Apply with: gh api repos/OWNER/REPO/branches/main/protection -X PUT --input .github/branch-protection.json",
+
+  "required_status_checks": {
+    "strict": true,
+    "contexts": [
+      "Lint & Format",
+      "Type Check",
+      "Test (Python 3.12)",
+      "Test (Python 3.13)",
+      "Security Scan",
+      "CI Success"
+    ]
+  },
+
+  "enforce_admins": false,
+
+  "required_pull_request_reviews": null,
+
+  "restrictions": null,
+
+  "required_linear_history": true,
+
+  "allow_force_pushes": false,
+
+  "allow_deletions": false,
+
+  "block_creations": false,
+
+  "required_conversation_resolution": true,
+
+  "lock_branch": false,
+
+  "allow_fork_syncing": true
+}
