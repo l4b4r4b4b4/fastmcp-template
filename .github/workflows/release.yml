@@ -1,5 +1,9 @@
 # Release Pipeline for FastMCP Template
 #
+# Permissions Note:
+# workflow_run triggered workflows need explicit permissions for security-events
+# to upload SARIF files to GitHub's Security tab.
+#
 # Workflow Design:
 # - Triggers AFTER CI workflow passes on main branch
 # - Triggers on semantic version tags (v*.*.*)
@@ -18,6 +22,12 @@
 # - Can use self-hosted runners via RUNNER_LABEL repository variable
 
 name: Release
+
+# Workflow-level permissions (required for workflow_run trigger)
+permissions:
+  contents: read
+  packages: write
+  security-events: write
 
 on:
   # Trigger after CI workflow completes on main
