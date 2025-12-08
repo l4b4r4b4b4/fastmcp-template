@@ -218,6 +218,88 @@ Options:
   --host HOST              Host for SSE transport (default: 127.0.0.1)
 ```
 
+## Test Prompts
+
+Use these prompts in a fresh chat session to verify the MCP server is working correctly. Each prompt demonstrates different capabilities of mcp-refcache.
+
+### 🟢 Basic: Hello World
+
+> **Prompt:** "Say hello to 'MCP Developer' using the fastmcp-template tools"
+
+**Expected:** The assistant calls `hello` with name="MCP Developer" and returns a greeting.
+
+---
+
+### 🟢 Basic: Health Check
+
+> **Prompt:** "Check if the fastmcp-template server is healthy"
+
+**Expected:** The assistant calls `health_check` and reports server status.
+
+---
+
+### 🟡 Intermediate: Generate & Explore Items
+
+> **Prompt:** "Generate 50 widgets and tell me about the first and last items"
+
+**Expected:** The assistant calls `generate_items(count=50, prefix="widget")` and describes widget_0 and widget_49.
+
+---
+
+### 🟡 Intermediate: Salary Calculator (Private Computation)
+
+> **Prompt:** "I want to calculate a 5% raise on my salary, but I don't want you to know my actual salary. Store $75,000 as a secret called 'current_salary', then calculate what it would be with a 5% raise."
+
+**Expected:**
+1. Assistant calls `store_secret(name="current_salary", value=75000)`
+2. Assistant calls `compute_with_secret(secret_ref="...", multiplier=1.05)`
+3. Assistant reports the result ($78,750) without ever seeing the original value
+
+---
+
+### 🔴 Advanced: Multi-Step Private Computation
+
+> **Prompt:** "Help me compare two investment options without seeing my principal. Store $10,000 as 'principal'. Then calculate returns for: Option A (8% return) and Option B (12% return). Which is better?"
+
+**Expected:**
+1. Assistant stores the secret principal
+2. Assistant computes both options using the same secret reference
+3. Assistant compares results ($10,800 vs $11,200) and recommends Option B
+4. The actual principal value is never revealed to the assistant
+
+---
+
+### 🔴 Advanced: Access Control Verification
+
+> **Prompt:** "Store my API key hash as a secret (use value 12345), then try to read it back directly using get_cached_result"
+
+**Expected:**
+1. Assistant stores the secret successfully
+2. When attempting to read with `get_cached_result`, it gets "access denied"
+3. Assistant explains that secrets have EXECUTE-only permission for agents
+
+---
+
+### 🔴 Advanced: Admin Tool Verification
+
+> **Prompt:** "Show me the cache statistics using admin_get_cache_stats"
+
+**Expected:** Assistant receives "Admin access required" error and explains that admin tools are permission-gated.
+
+---
+
+### Test Coverage Summary
+
+| Feature | Prompt Level | Tools Used |
+|---------|--------------|------------|
+| Basic greeting | 🟢 Basic | `hello` |
+| Server health | 🟢 Basic | `health_check` |
+| Item generation | 🟡 Intermediate | `generate_items` |
+| Secret storage | 🟡 Intermediate | `store_secret` |
+| Private computation | 🟡 Intermediate | `compute_with_secret` |
+| Access control | 🔴 Advanced | `get_cached_result` |
+| Admin gating | 🔴 Advanced | `admin_*` tools |
+
 ## License
 
 MIT License - see [LICENSE](LICENSE) for details.
