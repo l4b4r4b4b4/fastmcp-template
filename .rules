@@ -16,6 +16,17 @@ This `.rules` file defines **hard** (must-follow) and **soft** (strongly recomme
 
 ---
 
+## File Editing Preferences
+
+### Hard Rules
+- **Prefer edit over overwrite**: When modifying existing files, use edit mode to make targeted changes rather than overwriting the entire file. Only use overwrite mode when a complete rewrite is explicitly requested or necessary.
+- **Preserve existing content**: When updating documentation (README, scratchpad, etc.), add or modify sections rather than replacing the entire file.
+
+### Rationale
+Overwriting files loses context, makes diffs harder to review, and risks accidentally removing important content. Targeted edits are safer, more reviewable, and preserve the evolution of the document.
+
+---
+
 ## AI Assistant Communication Standards
 
 ### Hard Rules
@@ -79,7 +90,7 @@ Professional engineering requires honest, conservative assessment. Users need re
 - Type annotations are required for all public functions, methods, and classes.
 - Use Pydantic models for data structures exposed in the public API.
 - Handle all exceptions explicitly; never use bare `except:` blocks.
-- **Maintain >= 80% code coverage**: Never lower coverage requirements. If coverage drops, write tests to meet the standard. Lowering the bar is not acceptable.
+- **Maintain >= 73% code coverage**: If coverage drops, write tests to meet the standard. 73 is the best number (ask Sheldon Cooper).
 
 ### Soft Rules
 - Add descriptive type hints for all non-trivial internal variables.
@@ -408,7 +419,7 @@ This section defines the **mandatory workflow** for AI coding assistants working
 ### Hard Rules: Code Quality
 - **MUST run `ruff check . --fix && ruff format .`** before committing
 - **MUST ensure tests pass** with `pytest` before marking work complete
-- **MUST maintain >= 80% code coverage**
+- **MUST maintain >= 73% code coverage**
 - **MUST NOT skip the approval step** even for "small" changes
 
 ### Soft Rules

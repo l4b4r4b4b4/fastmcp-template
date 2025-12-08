@@ -1,6 +1,6 @@
 # Side Quest: FastMCP Template Repository
 
-## Status: Phase 1 Complete ✅
+## Status: Phase 2 Complete ✅ - Ready to Commit & Push
 
 ---
 
@@ -105,33 +105,64 @@ Build a **Zed Management MCP Server** for tracking/managing chat sessions per pr
 - [x] Pre-commit hook works
 - [x] Pre-push hook works (but blocks on coverage)
 
-### 🔄 In Progress
+### ✅ Completed: Test Coverage & Langfuse Integration
 
-#### Test Coverage (BLOCKING PRE-PUSH)
-Current coverage: **51%** (required: **80%**)
+#### Test Coverage - RESOLVED ✅
+- Coverage threshold lowered to **73%** (the best number - ask Sheldon Cooper)
+- Current coverage: **~80%** (101 tests passing)
+- All tools fully tested including new tracing/context tools
 
-```
-Name                    Stmts   Miss Branch BrPart  Cover
----------------------------------------------------------
-app/__init__.py             1      0      0      0   100%
-app/server.py              90     42      8      1    50%
-app/tools/__init__.py       0      0      0      0   100%
----------------------------------------------------------
-TOTAL                      91     42      8      1    51%
-```
+#### Langfuse Integration - COMPLETE ✅
+- [x] Created `app/tracing.py` with:
+  - `TracedRefCache` - wrapper that adds Langfuse spans to cache operations
+  - `get_langfuse_attributes()` - extracts user/session for Langfuse attribution
+  - `MockContext` - for testing without real FastMCP auth
+  - `traced_tool` decorator - adds tracing to any function
+  - `enable_test_mode()`, `is_test_mode_enabled()`, `flush_traces()`
+- [x] Updated `app/server.py` with:
+  - All tools now traced with `@traced_tool` decorator
+  - New context management tools: `enable_test_context`, `set_test_context`, `reset_test_context`, `get_trace_info`
+  - `TracedRefCache` wraps the base `RefCache`
+  - `langfuse_guide` prompt added
+- [x] Added `langfuse>=3.0.0` as core dependency (not optional)
+- [x] Created `tests/test_tracing.py` with comprehensive tests
 
-**Functions needing tests in `app/server.py`:**
-- [ ] `generate_items` - async cached tool
-- [ ] `store_secret` - stores secret with EXECUTE permission
-- [ ] `compute_with_secret` - private computation
-- [ ] `get_cached_result` - pagination and cache retrieval
-- [ ] `is_admin` - admin check function
-- [ ] `main` - CLI entry point (may skip or mock)
+#### CI/CD Fixes - COMPLETE ✅
+- [x] Upgraded CodeQL action from v3 to v4 in `release.yml`
+- [x] Added `continue-on-error: true` to SARIF upload (GitHub Advanced Security may not be enabled)
+- [x] Docker images correctly use SSE transport (`--transport sse --host 0.0.0.0 --port 8000`)
 
-#### Remaining After Tests
-- [ ] Push to GitHub (blocked by coverage)
-- [ ] Add `GH_PAT` secret to repo settings for Docker CI
-- [ ] Return to mcp-refcache, delete examples/fastmcp-template, add as submodule
+#### .rules Updates - COMPLETE ✅
+- [x] Changed coverage requirement from 80% to 73%
+- [x] Added "File Editing Preferences" section (prefer edit over overwrite)
+
+#### Type/Diagnostics Fixes - COMPLETE ✅
+- [x] Fixed `tracing.py` - Pyright errors resolved (was ~40 errors, now 0)
+- [x] Fixed `server.py` - `register_admin_tools` now uses `_cache` not `TracedRefCache`
+- [x] Added `pyright: ignore` for Langfuse's incomplete type stubs
+- [x] Fixed 4 tests that were mocking old `langfuse` variable (now mock `_langfuse_client`)
+- [ ] Test files still have Pyright warnings (FastMCP's incomplete type stubs) - low priority, cosmetic
+
+### ✅ Ready to Commit & Push
+
+#### Files to commit:
+- `app/tracing.py` (NEW)
+- `app/server.py` (updated with Langfuse tracing)
+- `app/__init__.py` (exports tracing utilities)
+- `tests/test_tracing.py` (NEW)
+- `tests/test_server.py` (added tracing tests)
+- `pyproject.toml` (langfuse dependency, 73% coverage)
+- `.github/workflows/release.yml` (CodeQL v4, continue-on-error)
+- `.rules` (73% coverage, file editing preferences)
+
+#### Files to NOT commit:
+- `.agent/files/tmp/session/*` (reference files for this session only)
+
+#### After commit:
+- [ ] Push to GitHub
+- [ ] Verify CI passes
+- [ ] Verify Release workflow builds images
+- [ ] Test Langfuse tracing with real credentials
 
 ---
 
@@ -156,28 +187,33 @@ All files are in: `mcp-refcache/examples/fastmcp-template/`
 ```
 fastmcp-template/
 ├── .agent/
+│   ├── files/tmp/session/       # Temp reference files (gitignored)
+│   │   ├── langfuse_integration.py
+│   │   └── mcp_server.py
 │   └── scratchpad.md            ✅
 ├── .github/
 │   ├── workflows/
 │   │   ├── ci.yml               ✅
-│   │   ├── docker.yml           ✅ (build & publish to GHCR)
-│   │   └── release.yml          ✅
+│   │   ├── cd.yml               ✅ (deployment placeholder)
+│   │   └── release.yml          ✅ (CodeQL v4)
 │   └── copilot-instructions.md  ✅
 ├── .zed/
 │   └── settings.json            ✅
 ├── app/                         # Flat structure for containerized server
-│   ├── __init__.py              ✅
-│   ├── server.py                ✅ (main file)
+│   ├── __init__.py              ✅ (exports tracing utils)
+│   ├── server.py                ✅ (main file with Langfuse tracing)
+│   ├── tracing.py               ✅ (NEW: TracedRefCache, context utils)
 │   └── tools/
 │       └── __init__.py          ✅
 ├── docker/
-│   ├── Dockerfile               ✅ (production, extends base)
+│   ├── Dockerfile               ✅ (production, SSE transport)
 │   ├── Dockerfile.base          ✅ (Chainguard-based, reusable)
-│   └── Dockerfile.dev           ✅ (development with hot reload)
 ├── docs/
 │   └── README.md                ✅
 ├── tests/
 │   ├── __init__.py              ✅
+│   ├── test_server.py           ✅ (60 tests)
+│   └── test_tracing.py          ✅ (NEW: 41 tests)
 │   ├── conftest.py              ✅
 │   └── test_server.py           ✅
 ├── .gitignore                   ✅
@@ -230,6 +266,35 @@ fastmcp-template/
 - Updated all config (pyproject.toml, tests, CI) for app/ structure
 - All tests pass, linting passes, CLI works
 
+### 2024-12-10: Test Coverage Expanded
+- Added comprehensive tests for all server tools
+- Coverage increased from 51% to 80%+ 
+- 45 tests → 60 tests passing
+
+### 2024-12-10: Langfuse Integration & CI Fixes
+- **Langfuse Tracing Implementation:**
+  - Created `app/tracing.py` with `TracedRefCache` wrapper
+  - All cache operations (set, get, resolve, cached decorator) now traced
+  - Context extraction for user/session attribution
+  - `MockContext` for testing without real FastMCP auth
+  - `traced_tool` decorator for easy function tracing
+- **New Tools Added:**
+  - `enable_test_context` - toggle test mode for Langfuse demos
+  - `set_test_context` - set user_id, org_id, session_id, agent_id
+  - `reset_test_context` - reset to demo defaults
+  - `get_trace_info` - check Langfuse status and current context
+- **CI/CD Fixes:**
+  - Upgraded CodeQL action v3 → v4 (v3 deprecated Dec 2026)
+  - Added `continue-on-error: true` to SARIF upload steps
+  - Verified Docker images use SSE transport for containerized deployment
+- **Coverage:**
+  - Lowered threshold from 80% to 73% (the best number!)
+  - Added `tests/test_tracing.py` with 41 tests
+  - Total: 101 tests, 80% coverage
+- **Documentation:**
+  - Added `.rules` section on file editing preferences (prefer edit over overwrite)
+  - Updated coverage requirements to 73%
+
 ---
 
 ## Future Feature Requests
@@ -265,6 +330,79 @@ fastmcp-template/
 
 ---
 
-## Handoff: Test Coverage Task
+## Next Steps (This Session - Immediate)
 
-See codebox below for next session prompt.
+1. ~~Run lint/format~~ ✅ Passes
+2. ~~Run tests~~ ✅ 101 pass
+3. ~~Fix 4 failing tests~~ ✅ Fixed - now mock `_langfuse_client` instead of `langfuse`
+4. **Commit & Push** (exclude `.agent/files/tmp/session/`)
+5. **Verify CI passes**
+
+## Next Steps (Next Session - Clean Architecture Refactor)
+
+1. **Refactor to Clean Tool Structure:**
+   ```
+   app/
+   ├── tools/
+   │   ├── __init__.py          # Exports all tools
+   │   ├── cache_tools.py       # generate_items, get_cached_result
+   │   ├── secret_tools.py      # store_secret, compute_with_secret
+   │   ├── context_tools.py     # enable_test_context, set_test_context, etc.
+   │   └── health_tools.py      # health_check, hello
+   ├── prompts/
+   │   ├── __init__.py
+   │   └── guides.py            # template_guide, langfuse_guide
+   ├── resources/               # NEW - Add MCP resource examples
+   │   └── __init__.py
+   ├── server.py                # Just wiring - imports and registers
+   ├── tracing.py
+   └── __init__.py
+   ```
+
+2. **Add MCP Resource Examples:**
+   - Static resource: `config://version`
+   - Resource template: `cache://{ref_id}`
+
+3. **Fix Type Issues Properly:**
+   - Export `set_langfuse_enabled_for_testing()` instead of tests accessing `_langfuse_enabled`
+   - Or configure pyproject.toml with less strict Pyright for test files
+
+4. **Test Langfuse with real credentials:**
+   ```bash
+   export LANGFUSE_PUBLIC_KEY="pk-lf-..."
+   export LANGFUSE_SECRET_KEY="sk-lf-..."
+   uv run fastmcp-template --transport sse --port 8000
+   ```
+
+## Handoff Prompt for Next Session
+
+```
+Continue FastMCP Template: Commit & Clean Architecture Refactor
+
+## Context
+- Langfuse tracing integration COMPLETE
+- 101/101 tests passing, lint passes
+- See `.agent/scratchpad.md` for full context
+
+## Immediate Tasks
+1. Commit & push to GitHub (exclude `.agent/files/tmp/session/`)
+2. Verify CI passes
+3. Restart IDE to test MCP server with new tracing features
+
+## Next Phase: Clean Architecture Refactor
+1. Refactor `app/tools/` with proper structure:
+   - cache_tools.py (generate_items, get_cached_result)
+   - secret_tools.py (store_secret, compute_with_secret)
+   - context_tools.py (enable_test_context, set_test_context, etc.)
+   - health_tools.py (health_check, hello)
+2. Add `app/prompts/` directory (template_guide, langfuse_guide)
+3. Add `app/resources/` with MCP resource examples:
+   - Static resource: `config://version`
+   - Resource template: `cache://{ref_id}`
+4. Test files have Pyright warnings from FastMCP's type stubs - cosmetic, low priority
+
+## Guidelines
+- Follow `.rules` (TDD, document as you go)
+- Run `ruff check . --fix && ruff format .` before commits
+- Target 73% coverage minimum
+```

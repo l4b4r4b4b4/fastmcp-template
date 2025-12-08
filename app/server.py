@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""FastMCP Template Server with RefCache Integration.
+"""FastMCP Template Server with RefCache and Langfuse Tracing.
 
 This template demonstrates how to use mcp-refcache with FastMCP to build
-an MCP server that handles large results efficiently.
+an MCP server that handles large results efficiently with full observability.
 
 Features demonstrated:
 - Reference-based caching for large results
@@ -11,11 +11,15 @@ Features demonstrated:
 - Access control (user vs agent permissions)
 - Private computation (EXECUTE without READ)
 - Both sync and async tool implementations
-- Optional Langfuse tracing integration
+- **Langfuse tracing integration** for observability
 
 Usage:
     # Install dependencies
     uv sync
+
+    # Set Langfuse credentials (optional but recommended)
+    export LANGFUSE_PUBLIC_KEY="pk-lf-..."
+    export LANGFUSE_SECRET_KEY="sk-lf-..."
 
     # Run with stdio (for Claude Desktop / Zed)
     uv run fastmcp-template
@@ -77,12 +81,33 @@ from mcp_refcache.fastmcp import (
 )
 
 # =============================================================================
+# Import Langfuse tracing
+# =============================================================================
+from app.tracing import (
+    MockContext,
+    TracedRefCache,
+    enable_test_mode,
+    flush_traces,
+    get_langfuse_attributes,
+    is_langfuse_enabled,
+    is_test_mode_enabled,
+    traced_tool,
+)
+
+# =============================================================================
 # Initialize FastMCP Server
 # =============================================================================
 
 mcp = FastMCP(
     name="FastMCP Template",
-    instructions=f"""A template MCP server with reference-based caching.
+    instructions=f"""A template MCP server with reference-based caching and Langfuse tracing.
+
+All tool calls are traced to Langfuse with:
+- User ID and Session ID from context (for filtering/aggregation)
+- Full context metadata (org_id, agent_id, cache_namespace)
+- Cache operation spans with hit/miss tracking
+
+Enable test mode with enable_test_context() to simulate different users.
 
 Available tools:
 - hello: Simple greeting tool (no caching)
@@ -90,18 +115,21 @@ Available tools:
 - store_secret: Store a secret value for private computation
 - compute_with_secret: Use a secret in computation without revealing it
 - get_cached_result: Retrieve or paginate through cached results
+- enable_test_context: Enable/disable test context for Langfuse demos
+- set_test_context: Set test context values for user attribution
+- reset_test_context: Reset test context to defaults
+- get_trace_info: Get current Langfuse tracing status
 
 {cache_instructions()}
 """,
 )
 
 # =============================================================================
-# Initialize RefCache
+# Initialize RefCache with Langfuse Tracing
 # =============================================================================
 
-# Create a RefCache instance with sensible defaults
-# Uses token-based sizing (default) for accurate LLM context management
-cache = RefCache(
+# Create the base RefCache instance
+_cache = RefCache(
     name="fastmcp-template",
     default_ttl=3600,  # 1 hour TTL
     preview_config=PreviewConfig(
@@ -109,6 +137,9 @@ cache = RefCache(
         default_strategy=PreviewStrategy.SAMPLE,  # Sample large collections
     ),
 )
+
+# Wrap with TracedRefCache for Langfuse observability
+cache = TracedRefCache(_cache)
 
 # =============================================================================
 # Pydantic Models for Tool Inputs
@@ -180,15 +211,154 @@ class CacheQueryInput(BaseModel):
 
 
 # =============================================================================
-# Tool Implementations
+# Context Management Tools (for Langfuse attribution testing)
 # =============================================================================
 
 
 @mcp.tool
+def enable_test_context(enabled: bool = True) -> dict[str, Any]:
+    """Enable or disable test context mode for Langfuse attribution demos.
+
+    When enabled, all traces will include user_id, session_id, and metadata
+    from the MockContext. This allows testing Langfuse filtering and
+    aggregation without a real FastMCP authentication setup.
+
+    Args:
+        enabled: Whether to enable test context mode (default: True).
+
+    Returns:
+        Status dict with current test mode state and context values.
+    """
+    enable_test_mode(enabled)
+
+    if enabled:
+        return {
+            "test_mode": True,
+            "context": MockContext.get_current_state(),
+            "langfuse_enabled": is_langfuse_enabled(),
+            "message": "Test context mode enabled. Traces will include user/session from MockContext.",
+        }
+    return {
+        "test_mode": False,
+        "context": None,
+        "langfuse_enabled": is_langfuse_enabled(),
+        "message": "Test context mode disabled. Context will come from real FastMCP.",
+    }
+
+
+@mcp.tool
+def set_test_context(
+    user_id: str | None = None,
+    org_id: str | None = None,
+    session_id: str | None = None,
+    agent_id: str | None = None,
+) -> dict[str, Any]:
+    """Set test context values for Langfuse attribution demos.
+
+    Changes here affect what user_id, session_id, and metadata are
+    sent to Langfuse traces. Use this to test filtering by different
+    users or sessions in the Langfuse dashboard.
+
+    Args:
+        user_id: User identity (e.g., "alice", "bob").
+        org_id: Organization identity (e.g., "acme", "globex").
+        session_id: Session identifier for grouping traces.
+        agent_id: Agent identity (e.g., "claude", "gpt4").
+
+    Returns:
+        Updated context state and example of Langfuse attributes.
+    """
+    # Auto-enable test mode when setting context
+    if not is_test_mode_enabled():
+        enable_test_mode(True)
+
+    if user_id is not None:
+        MockContext.set_state(user_id=user_id)
+    if org_id is not None:
+        MockContext.set_state(org_id=org_id)
+    if agent_id is not None:
+        MockContext.set_state(agent_id=agent_id)
+    if session_id is not None:
+        MockContext.set_session_id(session_id)
+
+    # Show what Langfuse will receive
+    attributes = get_langfuse_attributes()
+
+    return {
+        "context": MockContext.get_current_state(),
+        "langfuse_attributes": {
+            "user_id": attributes["user_id"],
+            "session_id": attributes["session_id"],
+            "metadata": attributes["metadata"],
+            "tags": attributes["tags"],
+        },
+        "message": "Context updated. Next tool calls will use these Langfuse attributes.",
+    }
+
+
+@mcp.tool
+def reset_test_context() -> dict[str, Any]:
+    """Reset test context to default demo values.
+
+    Returns:
+        Reset context state.
+    """
+    MockContext.reset()
+    return {
+        "context": MockContext.get_current_state(),
+        "message": "Context reset to default demo values.",
+    }
+
+
+@mcp.tool
+def get_trace_info() -> dict[str, Any]:
+    """Get information about the current Langfuse trace and context.
+
+    Returns metadata about Langfuse tracing status and current
+    context values for debugging.
+
+    Returns:
+        Dict with Langfuse configuration and current context.
+    """
+    import os
+
+    attributes = get_langfuse_attributes()
+
+    return {
+        "langfuse_enabled": is_langfuse_enabled(),
+        "langfuse_host": os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com"),
+        "public_key_set": bool(os.getenv("LANGFUSE_PUBLIC_KEY")),
+        "secret_key_set": bool(os.getenv("LANGFUSE_SECRET_KEY")),
+        "test_mode_enabled": is_test_mode_enabled(),
+        "current_context": MockContext.get_current_state()
+        if is_test_mode_enabled()
+        else None,
+        "langfuse_attributes": {
+            "user_id": attributes["user_id"],
+            "session_id": attributes["session_id"],
+            "metadata": attributes["metadata"],
+            "tags": attributes["tags"],
+        },
+        "message": (
+            "Traces are being sent to Langfuse with user/session attribution"
+            if is_langfuse_enabled()
+            else "Set LANGFUSE_PUBLIC_KEY and LANGFUSE_SECRET_KEY to enable tracing"
+        ),
+    }
+
+
+# =============================================================================
+# Tool Implementations with Langfuse Tracing
+# =============================================================================
+
+
+@mcp.tool
+@traced_tool("hello")
 def hello(name: str = "World") -> dict[str, Any]:
     """Say hello to someone.
 
     A simple example tool that doesn't use caching.
+    Traced to Langfuse with user/session attribution.
 
     Args:
         name: The name to greet.
@@ -207,11 +377,12 @@ def hello(name: str = "World") -> dict[str, Any]:
 async def generate_items(
     count: int = 10,
     prefix: str = "item",
-) -> list[dict[str, Any]]:
+) -> dict[str, Any]:
     """Generate a list of items.
 
     Demonstrates caching of large results in the PUBLIC namespace.
     For large counts, returns a reference with a preview instead of the full data.
+    All operations are traced to Langfuse with user/session attribution.
 
     Use get_cached_result to paginate through large results.
 
@@ -225,6 +396,8 @@ async def generate_items(
     **Caching:** Large results are cached in the public namespace.
 
     **Pagination:** Use `page` and `page_size` to navigate results.
+
+    **Preview Size:** server default. Override per-call with `get_cached_result(ref_id, max_size=...)`
     """
     validated = ItemGenerationInput(count=count, prefix=prefix)
 
@@ -242,11 +415,13 @@ async def generate_items(
 
 
 @mcp.tool
+@traced_tool("store_secret")
 def store_secret(name: str, value: float) -> dict[str, Any]:
     """Store a secret value that agents cannot read, only use in computations.
 
     This demonstrates the EXECUTE permission - agents can use the value
     in compute_with_secret without ever seeing what it is.
+    Traced to Langfuse (secret value is NOT logged).
 
     Args:
         name: Name for the secret.
@@ -284,12 +459,14 @@ def store_secret(name: str, value: float) -> dict[str, Any]:
 
 @mcp.tool
 @with_cache_docs(accepts_references=True, private_computation=True)
+@traced_tool("compute_with_secret")
 def compute_with_secret(secret_ref: str, multiplier: float = 1.0) -> dict[str, Any]:
     """Compute using a secret value without revealing it.
 
     The secret is multiplied by the provided multiplier.
     This demonstrates private computation - the agent orchestrates
     the computation but never sees the actual secret value.
+    Traced to Langfuse (computation logged, secret value NOT exposed).
 
     Args:
         secret_ref: Reference ID of the secret value.
@@ -325,6 +502,7 @@ def compute_with_secret(secret_ref: str, multiplier: float = 1.0) -> dict[str, A
 
 @mcp.tool
 @with_cache_docs(accepts_references=True, supports_pagination=True)
+@traced_tool("get_cached_result")
 async def get_cached_result(
     ref_id: str,
     page: int | None = None,
@@ -337,6 +515,8 @@ async def get_cached_result(
     - Get a preview of a cached value
     - Paginate through large lists
     - Access the full value of a cached result
+
+    All cache operations are traced to Langfuse with hit/miss status.
 
     Args:
         ref_id: Reference ID to look up.
@@ -396,16 +576,19 @@ async def get_cached_result(
 
 
 @mcp.tool
+@traced_tool("health_check")
 def health_check() -> dict[str, Any]:
     """Check server health status.
 
     Returns:
-        Health status information.
+        Health status information including Langfuse tracing status.
     """
     return {
         "status": "healthy",
         "server": "fastmcp-template",
         "cache": cache.name,
+        "langfuse_enabled": is_langfuse_enabled(),
+        "test_mode": is_test_mode_enabled(),
     }
 
 
@@ -423,10 +606,10 @@ async def is_admin(ctx: Any) -> bool:
     return False
 
 
-# Register admin tools with the cache
+# Register admin tools with the underlying cache (not the traced wrapper)
 _admin_tools = register_admin_tools(
     mcp,
-    cache,
+    _cache,
     admin_check=is_admin,
     prefix="admin_",
     include_dangerous=False,
@@ -442,6 +625,30 @@ _admin_tools = register_admin_tools(
 def template_guide() -> str:
     """Guide for using this MCP server template."""
     return f"""# FastMCP Template Guide
+
+## Langfuse Tracing
+
+All tool calls are traced to Langfuse with user/session attribution.
+
+1. **Enable Test Mode**
+   ```
+   enable_test_context(True)
+   ```
+
+2. **Set User Context**
+   ```
+   set_test_context(user_id="alice", org_id="acme", session_id="chat-001")
+   ```
+
+3. **View Trace Info**
+   ```
+   get_trace_info()
+   ```
+
+4. **View in Langfuse Dashboard**
+   - Filter by User: "alice"
+   - Filter by Session: "chat-001"
+   - Filter by Tags: "fastmcptemplate", "mcprefcache"
 
 ## Quick Start
 
@@ -479,6 +686,77 @@ compute_with_secret(ref_id, multiplier=2.0)
 """
 
 
+@mcp.prompt
+def langfuse_guide() -> str:
+    """Guide for using Langfuse tracing with this server."""
+    return """# Langfuse Tracing Guide
+
+## Setup
+
+Set environment variables before starting the server:
+
+```bash
+export LANGFUSE_PUBLIC_KEY="pk-lf-..."
+export LANGFUSE_SECRET_KEY="sk-lf-..."
+export LANGFUSE_HOST="https://cloud.langfuse.com"  # Optional, defaults to cloud
+```
+
+## Context Propagation
+
+All tool calls automatically propagate context to Langfuse traces:
+
+1. **User Attribution**
+   - `user_id`: Tracks which user made the request
+   - `session_id`: Groups related requests into sessions
+   - `metadata`: Additional context (org_id, agent_id, cache_namespace)
+
+2. **Testing Context**
+   Enable test mode to simulate different users:
+   ```
+   enable_test_context(True)
+   set_test_context(user_id="alice", org_id="acme", session_id="chat-001")
+   ```
+
+3. **Cache Operations**
+   Cache set/get/resolve operations create child spans that inherit
+   user_id and session_id for complete attribution.
+
+## Example Workflow
+
+```python
+# 1. Enable test mode and set user
+enable_test_context(True)
+set_test_context(user_id="alice", session_id="demo-session")
+
+# 2. Generate items (traced with user attribution)
+result = generate_items(count=100, prefix="widget")
+
+# 3. Retrieve cached result (same user in trace)
+cached = get_cached_result(result["ref_id"])
+
+# 4. Check trace info
+info = get_trace_info()
+```
+
+## Viewing Traces in Langfuse
+
+1. Go to your Langfuse dashboard
+2. Navigate to Traces
+3. Filter by:
+   - **User**: "alice" (or any user_id you set)
+   - **Session**: "demo-session"
+   - **Tags**: "fastmcptemplate", "mcprefcache", "cacheset", "cacheget"
+   - **Metadata**: orgid, agentid, cachenamespace
+
+## Best Practices
+
+- Enable test mode for demos and testing
+- Use meaningful user_id and session_id values
+- Check get_trace_info() to verify tracing is working
+- Flush traces on server shutdown (handled automatically)
+"""
+
+
 # =============================================================================
 # Main Entry Point
 # =============================================================================
@@ -487,7 +765,7 @@ compute_with_secret(ref_id, multiplier=2.0)
 def main() -> None:
     """Run the MCP server."""
     parser = argparse.ArgumentParser(
-        description="FastMCP Template Server with RefCache",
+        description="FastMCP Template Server with RefCache and Langfuse Tracing",
     )
     parser.add_argument(
         "--transport",
@@ -509,14 +787,23 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    if args.transport == "stdio":
-        mcp.run(transport="stdio")
-    else:
-        mcp.run(
-            transport="sse",
-            host=args.host,
-            port=args.port,
-        )
+    # Print startup info
+    print(f"Langfuse tracing: {'enabled' if is_langfuse_enabled() else 'disabled'}")
+    print("Context propagation: enabled (user_id, session_id, metadata)")
+    print("Use enable_test_context() to simulate different users")
+
+    try:
+        if args.transport == "stdio":
+            mcp.run(transport="stdio")
+        else:
+            mcp.run(
+                transport="sse",
+                host=args.host,
+                port=args.port,
+            )
+    finally:
+        # Ensure all traces are flushed on exit
+        flush_traces()
 
 
 if __name__ == "__main__":

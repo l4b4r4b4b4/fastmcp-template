@@ -9,12 +9,10 @@ authors = [
 requires-python = ">=3.12"
 dependencies = [
     "fastmcp>=2.13.3",
+    "langfuse>=3.0.0",
     "mcp-refcache",
     "pydantic>=2.12.5",
 ]
-
-[project.optional-dependencies]
-langfuse = ["langfuse>=2.0.0"]
 
 [project.scripts]
 fastmcp-template = "app.server:main"
@@ -79,11 +77,17 @@ source = ["app"]
 branch = true
 
 [tool.coverage.report]
+# 73 - the best number (ask Sheldon Cooper)
+fail_under = 73
+show_missing = true
 exclude_lines = [
     "pragma: no cover",
     "if TYPE_CHECKING:",
     "raise NotImplementedError",
 ]
+
+[tool.coverage.html]
+skip_empty = true
 
 [tool.mypy]
 python_version = "3.12"

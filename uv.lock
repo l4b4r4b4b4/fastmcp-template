@@ -481,13 +481,9 @@ version = "0.0.1"
 source = { editable = "." }
 dependencies = [
     { name = "fastmcp" },
+    { name = "langfuse" },
     { name = "mcp-refcache" },
     { name = "pydantic" },
-]
-
-[package.optional-dependencies]
-langfuse = [
-    { name = "langfuse" },
 ]
 
 [package.dev-dependencies]
@@ -503,11 +499,10 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "fastmcp", specifier = ">=2.13.3" },
-    { name = "langfuse", marker = "extra == 'langfuse'", specifier = ">=2.0.0" },
+    { name = "langfuse", specifier = ">=3.0.0" },
     { name = "mcp-refcache", git = "https://github.com/l4b4r4b4b4/mcp-refcache.git?tag=v0.0.2" },
     { name = "pydantic", specifier = ">=2.12.5" },
 ]
-provides-extras = ["langfuse"]
 
 [package.metadata.requires-dev]
 dev = [
