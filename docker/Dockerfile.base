@@ -45,13 +45,15 @@ COPY pyproject.toml uv.lock ./
 # --no-install-project: Don't install the project itself yet
 # --frozen: Use exact versions from lockfile
 # --no-dev: Skip dev dependencies for smaller image
+# UV_PROJECT_ENVIRONMENT: Tell uv to use /opt/venv instead of default .venv
+ENV UV_PROJECT_ENVIRONMENT=/opt/venv
+
 RUN --mount=type=secret,id=github_token \
     GITHUB_TOKEN=$(cat /run/secrets/github_token 2>/dev/null || echo "") && \
     if [ -n "$GITHUB_TOKEN" ]; then \
     git config --global url."https://${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"; \
     fi && \
     uv venv /opt/venv && \
-    . /opt/venv/bin/activate && \
     uv sync --frozen --no-dev --no-install-project && \
     git config --global --unset-all url.https://${GITHUB_TOKEN}@github.com/.insteadOf 2>/dev/null || true
 
