@@ -1,14 +1,17 @@
 # Release Pipeline for FastMCP Template
 #
 # Workflow Design:
-# - Only triggers AFTER CI workflow passes on main branch
+# - Triggers AFTER CI workflow passes on main branch
+# - Triggers on semantic version tags (v*.*.*)
 # - Builds and publishes Docker images to GHCR
 # - Runs security scans on built images
 #
-# This ensures:
-# - No Docker builds on failed CI
-# - No Docker builds on PRs (only after merge to main)
-# - Clean separation of CI (test) and Release (build & publish)
+# Image Tagging Strategy:
+# - On merge to main: `latest`, `sha-abc1234`
+# - On version tag (v0.0.1): `latest`, `v0.0.1`, `0.0.1`, `0.0`
+#
+# Future (dev builds on PR):
+# - `dev-latest`, `dev-v0.0.1`, `dev-sha-abc1234`
 #
 # Runner Support:
 # - Uses GitHub-hosted runners by default
@@ -22,6 +25,12 @@ on:
     workflows: ["CI"]
     types: [completed]
     branches: [main]
+
+  # Trigger on semantic version tags
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+-*" # Pre-releases like v0.0.1-alpha
 
   # Manual trigger for re-runs
   workflow_dispatch:
@@ -43,26 +52,39 @@ env:
   APP_IMAGE_NAME: ${{ github.repository_owner }}/fastmcp-template
 
 jobs:
-  # Gate: Only proceed if CI passed
+  # Gate: Only proceed if CI passed (or tag push / manual trigger)
   check-ci:
     name: Verify CI Passed
     runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}
     if: >
       github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'push' ||
       github.event.workflow_run.conclusion == 'success'
     outputs:
       should_build: ${{ steps.check.outputs.should_build }}
+      is_release: ${{ steps.check.outputs.is_release }}
+      version: ${{ steps.check.outputs.version }}
 
     steps:
-      - name: Check CI status
+      - name: Check CI status and extract version
         id: check
         run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref_type }}" == "tag" ]]; then
+            VERSION="${{ github.ref_name }}"
+            echo "Tag push - version: $VERSION"
+            echo "should_build=true" >> $GITHUB_OUTPUT
+            echo "is_release=true" >> $GITHUB_OUTPUT
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             echo "Manual trigger - proceeding with build"
             echo "should_build=true" >> $GITHUB_OUTPUT
+            echo "is_release=false" >> $GITHUB_OUTPUT
+            echo "version=latest" >> $GITHUB_OUTPUT
           elif [[ "${{ github.event.workflow_run.conclusion }}" == "success" ]]; then
             echo "CI passed - proceeding with build"
             echo "should_build=true" >> $GITHUB_OUTPUT
+            echo "is_release=false" >> $GITHUB_OUTPUT
+            echo "version=latest" >> $GITHUB_OUTPUT
           else
             echo "CI did not pass - skipping build"
             echo "should_build=false" >> $GITHUB_OUTPUT
@@ -105,9 +127,14 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.BASE_IMAGE_NAME }}
           tags: |
+            # Always include sha
             type=sha,prefix=
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=raw,value={{date 'YYYYMMDD-HHmmss'}}
+            # Latest on main branch
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || needs.check-ci.outputs.is_release == 'false' }}
+            # Semantic version tags (v0.0.1 -> v0.0.1, 0.0.1, 0.0)
+            type=semver,pattern=v{{version}},enable=${{ needs.check-ci.outputs.is_release == 'true' }}
+            type=semver,pattern={{version}},enable=${{ needs.check-ci.outputs.is_release == 'true' }}
+            type=semver,pattern={{major}}.{{minor}},enable=${{ needs.check-ci.outputs.is_release == 'true' }}
 
       - name: Build and push base image
         id: build
@@ -161,9 +188,14 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.APP_IMAGE_NAME }}
           tags: |
+            # Always include sha
             type=sha,prefix=
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=raw,value={{date 'YYYYMMDD-HHmmss'}}
+            # Latest on main branch
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || needs.check-ci.outputs.is_release == 'false' }}
+            # Semantic version tags (v0.0.1 -> v0.0.1, 0.0.1, 0.0)
+            type=semver,pattern=v{{version}},enable=${{ needs.check-ci.outputs.is_release == 'true' }}
+            type=semver,pattern={{version}},enable=${{ needs.check-ci.outputs.is_release == 'true' }}
+            type=semver,pattern={{major}}.{{minor}},enable=${{ needs.check-ci.outputs.is_release == 'true' }}
 
       - name: Build and push app image
         id: build
@@ -246,8 +278,17 @@ jobs:
         run: |
           echo "## Release Pipeline Complete :rocket:" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Release Info" >> $GITHUB_STEP_SUMMARY
+          echo "- Version: \`${{ needs.check-ci.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Is Semantic Release: \`${{ needs.check-ci.outputs.is_release }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Images Published" >> $GITHUB_STEP_SUMMARY
-          echo "- Base: \`${{ env.REGISTRY }}/${{ env.BASE_IMAGE_NAME }}:latest\`" >> $GITHUB_STEP_SUMMARY
-          echo "- App: \`${{ env.REGISTRY }}/${{ env.APP_IMAGE_NAME }}:latest\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Base: \`${{ env.REGISTRY }}/${{ env.BASE_IMAGE_NAME }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- App: \`${{ env.REGISTRY }}/${{ env.APP_IMAGE_NAME }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Tags" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "${{ needs.build-app.outputs.app-tags }}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Security Scan: ${{ needs.security-scan.result }}" >> $GITHUB_STEP_SUMMARY
