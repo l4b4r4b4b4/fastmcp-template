@@ -256,7 +256,7 @@ class TestTracedRefCache:
         assert isinstance(result, dict)
         assert "value" in result or "preview" in result or "ref_id" in result
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_cached_decorator_async(self) -> None:
         """Test cached decorator works for async functions."""
 
@@ -282,7 +282,7 @@ class TestTracedTool:
         result = my_func(5)
         assert result["result"] == 10
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_decorated_async_function(self) -> None:
         """Test decorated async function works."""
 
