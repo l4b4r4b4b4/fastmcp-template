@@ -303,7 +303,7 @@ class TestGenerateItems:
             return fn.__wrapped__
         return fn
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_generate_items_default(self) -> None:
         """Test generate_items with default parameters."""
         from app import server
@@ -323,8 +323,8 @@ class TestGenerateItems:
             # If cached, should have preview or data
             assert result is not None
 
-    @pytest.mark.asyncio()
-    async def test_generate_items_custom_count(self) -> None:
+    @pytest.mark.asyncio
+    async def test_generate_items_custom_params(self) -> None:
         """Test generate_items with custom count."""
         from app import server
 
@@ -338,8 +338,8 @@ class TestGenerateItems:
             assert result[0]["name"] == "widget_0"
             assert result[4]["name"] == "widget_4"
 
-    @pytest.mark.asyncio()
-    async def test_generate_items_structure(self) -> None:
+    @pytest.mark.asyncio
+    async def test_generate_items_large_count(self) -> None:
         """Test that generated items have correct structure."""
         from app import server
 
@@ -519,7 +519,7 @@ class TestGetCachedResult:
 
         return await fn(ref_id, page, page_size, max_size)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_get_cached_result_invalid_ref(self) -> None:
         """Test that invalid reference returns error dict."""
         result = await self._call_get_cached_result("nonexistent:ref")
@@ -527,7 +527,7 @@ class TestGetCachedResult:
         assert "error" in result
         assert result["ref_id"] == "nonexistent:ref"
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_get_cached_result_with_valid_ref(self) -> None:
         """Test getting a cached result with valid reference."""
         # Store something first
@@ -540,8 +540,8 @@ class TestGetCachedResult:
         # Should return either data or permission error (agent can't read secrets)
         assert "ref_id" in result
 
-    @pytest.mark.asyncio()
-    async def test_get_cached_result_returns_ref_id(self) -> None:
+    @pytest.mark.asyncio
+    async def test_get_cached_result_not_found(self) -> None:
         """Test that result includes the requested ref_id."""
         result = await self._call_get_cached_result("test:ref:123")
 
@@ -552,7 +552,7 @@ class TestGetCachedResult:
 class TestIsAdmin:
     """Tests for the is_admin function."""
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_is_admin_returns_false(self) -> None:
         """Test that is_admin returns False by default."""
         from app.server import is_admin
@@ -562,7 +562,7 @@ class TestIsAdmin:
 
         assert result is False
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_is_admin_with_none_context(self) -> None:
         """Test that is_admin handles None context."""
         from app.server import is_admin
