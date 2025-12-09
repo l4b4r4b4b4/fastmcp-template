@@ -194,6 +194,32 @@ uv run pytest
 - **Error Handling**: Return structured errors that agents can understand and act on
 - **Reference-Based Results**: Use RefCache for large results to avoid context bloat
 
+### MCP Tool Return Types
+
+#### Hard Rules
+- **`@cache.cached` decorated tools MUST return `dict[str, Any]`**: The decorator wraps the raw return value in a structured cache response containing `ref_id`, `preview`, and metadata. The type annotation must match what the decorator actually returns, not the inner function's raw data.
+
+#### Rationale
+MCP generates tool schemas from Python type annotations. If a cached tool is annotated as returning `list[...]` but the decorator returns `dict[str, Any]`, clients receive a schema mismatch error. The annotation must describe the wrapped response.
+
+#### Example
+```python
+# ✅ Correct - annotation matches decorator's wrapped response
+@mcp.tool
+@cache.cached(namespace="public")
+async def generate_items(count: int = 10) -> dict[str, Any]:
+    """Generate items with caching."""
+    items = [{"id": i} for i in range(count)]
+    return items  # Raw data, decorator wraps it
+
+# ❌ Wrong - annotation describes raw data, not wrapped response
+@mcp.tool
+@cache.cached(namespace="public")
+async def generate_items(count: int = 10) -> list[dict[str, Any]]:
+    """This causes MCP schema mismatch errors."""
+    return [{"id": i} for i in range(count)]
+```
+
 ---
 
 ## Documentation Requirements

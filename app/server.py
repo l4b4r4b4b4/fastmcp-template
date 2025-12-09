@@ -411,7 +411,7 @@ async def generate_items(
     ]
 
     # Return raw data - decorator handles caching and structured response
-    return items
+    return items  # type: ignore[return-value]  # decorator transforms to dict
 
 
 @mcp.tool

@@ -201,7 +201,8 @@ def _mock_try_get_fastmcp_context() -> MockContext | None:
     if _test_mode_enabled:
         return MockContext()
     if _original_try_get_context is not None:
-        return _original_try_get_context()
+        result: MockContext | None = _original_try_get_context()
+        return result
     return None
 
 
@@ -340,7 +341,8 @@ class TracedRefCache:
     @property
     def name(self) -> str:
         """Get the cache name."""
-        return self._cache.name
+        name: str = self._cache.name
+        return name
 
     @property
     def preview_config(self) -> PreviewConfig:

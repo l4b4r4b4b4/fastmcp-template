@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from collections.abc import Generator
 
 
-@pytest.fixture
+@pytest.fixture()
 def cache() -> Generator[RefCache, None, None]:
     """Create a fresh RefCache instance for testing."""
     test_cache = RefCache(
@@ -28,7 +28,7 @@ def cache() -> Generator[RefCache, None, None]:
     test_cache.clear()
 
 
-@pytest.fixture
+@pytest.fixture()
 def sample_items() -> list[dict[str, int | str]]:
     """Generate sample items for testing."""
     return [{"id": i, "name": f"item_{i}", "value": i * 10} for i in range(100)]

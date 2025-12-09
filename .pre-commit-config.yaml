@@ -46,12 +46,27 @@ repos:
         additional_dependencies: ["bandit[toml]"]
         files: ^app/
 
-  # Check for common security issues in dependencies
-  - repo: https://github.com/Lucas-C/pre-commit-hooks-safety
-    rev: v1.3.3
+  # Dependency vulnerability scanning (pip-audit works with UV projects)
+  - repo: https://github.com/pypa/pip-audit
+    rev: v2.10.0
     hooks:
-      - id: python-safety-dependencies-check
-        files: pyproject.toml
+      - id: pip-audit
+        # --local: scan installed packages in .venv
+        # --skip-editable: skip local package (not on PyPI)
+        args: [--local, --skip-editable]
+        pass_filenames: false
+
+  # Local pre-push hook: run tests with coverage
+  # Coverage threshold (fail_under) is defined in pyproject.toml
+  - repo: local
+    hooks:
+      - id: pytest-coverage
+        name: pytest with coverage
+        entry: uv run pytest --cov=app --cov-report=term -q
+        language: system
+        types: [python]
+        pass_filenames: false
+        stages: [pre-push]
 
 # CI configuration
 ci:

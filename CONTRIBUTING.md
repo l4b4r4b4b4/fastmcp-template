@@ -44,6 +44,31 @@ def resolve_reference(self, ref_id, namespace=None):
     ...
 ```
 
+### MCP Cached Tool Return Types
+
+**Tools decorated with `@cache.cached` MUST be annotated to return `dict[str, Any]`.**
+
+The `@cache.cached` decorator wraps the raw return value in a structured cache response containing `ref_id`, `preview`, and metadata. The type annotation must match what the decorator actually returns, not the inner function's raw data.
+
+```python
+# ✅ Good - annotation matches decorator's wrapped response
+@mcp.tool
+@cache.cached(namespace="public")
+async def generate_items(count: int = 10) -> dict[str, Any]:
+    """Generate items with caching."""
+    items = [{"id": i} for i in range(count)]
+    return items  # Raw data, decorator wraps it
+
+# ❌ Bad - annotation describes raw data, causes MCP schema mismatch
+@mcp.tool
+@cache.cached(namespace="public")
+async def generate_items(count: int = 10) -> list[dict[str, Any]]:
+    """This causes client validation errors."""
+    return [{"id": i} for i in range(count)]
+```
+
+**Why this matters:** MCP generates tool schemas from Python type annotations. If a cached tool is annotated as returning `list[...]` but the decorator returns `dict[str, Any]`, clients receive a schema mismatch error.
+
 ### Pydantic Models for Inputs/Outputs
 
 **All public API functions MUST use Pydantic models for complex inputs and outputs.**
@@ -52,7 +77,7 @@ def resolve_reference(self, ref_id, namespace=None):
 # ✅ Good - Pydantic model for structured input
 class ResolveOptions(BaseModel):
     """Options for resolving a cache reference."""
-    
+
     namespace: str | None = Field(
         default=None,
         description="Namespace to resolve from. If None, searches all accessible namespaces.",
@@ -167,7 +192,7 @@ uv run pytest -v
 - Test files must be named `test_*.py`
 - Test functions must be named `test_*`
 - Use pytest fixtures for common setup
-- Aim for >80% code coverage
+- Aim for ≥73% code coverage (threshold defined in `pyproject.toml`)
 - Use `pytest-asyncio` for async tests
 
 ```python
@@ -182,7 +207,7 @@ def cache() -> RefCache:
 def test_cache_stores_value(cache: RefCache) -> None:
     """Test that values can be stored and retrieved."""
     ref = cache.set("key", {"data": "value"})
-    
+
     assert ref.ref_id is not None
     assert cache.get(ref.ref_id) == {"data": "value"}
 
@@ -191,7 +216,7 @@ async def test_async_resolution(cache: RefCache) -> None:
     """Test async reference resolution."""
     ref = await cache.async_set("key", "value")
     result = await cache.async_get(ref.ref_id)
-    
+
     assert result == "value"
 ```
 

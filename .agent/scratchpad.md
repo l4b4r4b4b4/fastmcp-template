@@ -268,7 +268,7 @@ fastmcp-template/
 
 ### 2024-12-10: Test Coverage Expanded
 - Added comprehensive tests for all server tools
-- Coverage increased from 51% to 80%+ 
+- Coverage increased from 51% to 80%+
 - 45 tests → 60 tests passing
 
 ### 2024-12-10: Langfuse Integration & CI Fixes
@@ -305,7 +305,7 @@ fastmcp-template/
 
 **Available tools**:
 - `read_file` - reads file content
-- `edit_file` - creates/edits files  
+- `edit_file` - creates/edits files
 - `copy_path` - copies entire files/directories
 
 **Missing tool**: Something like `copy_text_passage` that could:

@@ -145,8 +145,8 @@ fastmcp-template/
 # Install dependencies
 uv sync
 
-# Install pre-commit hooks
-uv run pre-commit install
+# Install pre-commit and pre-push hooks (configured in .pre-commit-config.yaml)
+uv run pre-commit install --install-hooks
 uv run pre-commit install --hook-type pre-push
 ```
 
