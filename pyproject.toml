@@ -51,7 +51,7 @@ select = [
     "E", "W", "F", "I", "B", "C4", "UP", "RUF", "D", "ANN", "TCH", "SIM", "PT",
 ]
 ignore = [
-    "E501", "B008", "D100", "D104", "D107", "ANN101", "ANN102", "ANN401",
+    "E501", "B008", "D100", "D104", "D107", "ANN401",
 ]
 
 [tool.ruff.lint.pydocstyle]
