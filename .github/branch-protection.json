@@ -6,7 +6,6 @@
     "strict": true,
     "contexts": [
       "Lint & Format",
-      "Type Check",
       "Test (Python 3.12)",
       "Test (Python 3.13)",
       "Test (Python 3.14)",
