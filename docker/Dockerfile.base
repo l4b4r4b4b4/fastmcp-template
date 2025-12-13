@@ -16,7 +16,7 @@
 # Usage in other projects:
 #   FROM ghcr.io/l4b4r4b4b4/fastmcp-base:latest
 #   COPY app/ /app/app/
-#   CMD ["python", "-m", "app.server", "--transport", "sse", "--host", "0.0.0.0"]
+#   CMD ["uv", "run", "fastmcp-template", "streamable-http"]
 # ==============================================================================
 
 # ==============================================================================
@@ -68,13 +68,16 @@ FROM cgr.dev/chainguard/python:latest AS runtime
 
 WORKDIR /app
 
+# Copy uv from official image for fast, reliable package execution
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
 # Copy virtual environment from builder
 # Chainguard Python expects packages in /home/nonroot/.local or similar
 # We use /opt/venv and add to PATH
 COPY --from=builder /opt/venv /opt/venv
 
 # Set environment variables
-ENV PATH="/opt/venv/bin:$PATH"
+ENV PATH="/usr/local/bin:/opt/venv/bin:$PATH"
 ENV PYTHONPATH="/app"
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1

@@ -512,6 +512,8 @@ dependencies = [
     { name = "langfuse" },
     { name = "mcp-refcache" },
     { name = "pydantic" },
+    { name = "pydantic-settings" },
+    { name = "typer" },
 ]
 
 [package.dev-dependencies]
@@ -526,10 +528,12 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "fastmcp", specifier = ">=2.13.3" },
-    { name = "langfuse", specifier = ">=3.0.0" },
-    { name = "mcp-refcache" },
-    { name = "pydantic", specifier = ">=2.12.5" },
+    { name = "fastmcp", specifier = ">=2.14.0" },
+    { name = "langfuse", specifier = ">=3.10.0" },
+    { name = "mcp-refcache", specifier = ">=0.1.0" },
+    { name = "pydantic", specifier = ">=2.10.0" },
+    { name = "pydantic-settings", specifier = ">=2.10.0" },
+    { name = "typer", specifier = ">=0.15.0" },
 ]
 
 [package.metadata.requires-dev]

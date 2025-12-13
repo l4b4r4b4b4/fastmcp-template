@@ -8,14 +8,16 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
-    "fastmcp>=2.13.3",
-    "langfuse>=3.0.0",
-    "mcp-refcache",
-    "pydantic>=2.12.5",
+    "fastmcp>=2.14.0",
+    "langfuse>=3.10.0",
+    "mcp-refcache>=0.1.0",
+    "pydantic>=2.10.0",
+    "pydantic-settings>=2.10.0",
+    "typer>=0.15.0",
 ]
 
 [project.scripts]
-fastmcp-template = "app.server:main"
+fastmcp-template = "app.__main__:app"
 
 [build-system]
 requires = ["hatchling>=1.0.0"]
