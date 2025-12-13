@@ -8,7 +8,6 @@
       "Lint & Format",
       "Test (Python 3.12)",
       "Test (Python 3.13)",
-      "Test (Python 3.14)",
       "Security Scan",
       "CI Success"
     ]

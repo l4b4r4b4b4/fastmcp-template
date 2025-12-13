@@ -6,6 +6,7 @@
 #   docker compose build                 # Build all images
 #
 # Environment variables (optional):
+#   PYTHON_VERSION: Python version for images (default: 3.12)
 #   LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY, LANGFUSE_HOST
 
 services:
@@ -15,6 +16,8 @@ services:
       context: .
       dockerfile: docker/Dockerfile
       target: production
+      args:
+        - PYTHON_VERSION=${PYTHON_VERSION:-3.12}
     image: ghcr.io/l4b4r4b4b4/fastmcp-template:latest
     ports:
       - "8000:8000"
@@ -29,6 +32,8 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile.dev
+      args:
+        - PYTHON_VERSION=${PYTHON_VERSION:-3.12}
     ports:
       - "8000:8000"
     volumes:
@@ -45,6 +50,8 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile.base
+      args:
+        - PYTHON_VERSION=${PYTHON_VERSION:-3.12}
     image: ghcr.io/l4b4r4b4b4/fastmcp-base:latest
     profiles:
       - build
