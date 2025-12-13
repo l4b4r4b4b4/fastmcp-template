@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.3] - 2024-12-14
+
+### Added
+
+- **Template usage documentation** - "Using This Template" section in README
+- **Rename instructions** - Step-by-step guide to rename project for your own use
+- **Tool creation guide** - How to add new tools to the template
+
+### Changed
+
+- **README improvements** - Updated CLI examples, project structure, Docker instructions
+- **Fixed outdated references** - Removed Chainguard references, updated workflow names
+
 ## [0.0.2] - 2024-12-14
 
 ### Fixed
@@ -53,6 +66,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Contributing guidelines
   - Project rules for AI coding assistants
 
-[Unreleased]: https://github.com/l4b4r4b4b4/fastmcp-template/compare/v0.0.1...HEAD
+[Unreleased]: https://github.com/l4b4r4b4b4/fastmcp-template/compare/v0.0.3...HEAD
+[0.0.3]: https://github.com/l4b4r4b4b4/fastmcp-template/releases/tag/v0.0.3
 [0.0.2]: https://github.com/l4b4r4b4b4/fastmcp-template/releases/tag/v0.0.2
 [0.0.1]: https://github.com/l4b4r4b4b4/fastmcp-template/releases/tag/v0.0.1

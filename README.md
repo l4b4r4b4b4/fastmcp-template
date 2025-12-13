@@ -2,6 +2,119 @@
 
 A production-ready FastMCP server template with [mcp-refcache](https://github.com/l4b4r4b4b4/mcp-refcache) integration for building AI agent tools that handle large data efficiently.
 
+## Using This Template
+
+### Create Your Project
+
+1. **Use as GitHub Template** (recommended):
+   - Click "Use this template" → "Create a new repository"
+   - Or use GitHub CLI: `gh repo create my-mcp-server --template l4b4r4b4b4/fastmcp-template`
+
+2. **Or clone directly**:
+   ```bash
+   git clone https://github.com/l4b4r4b4b4/fastmcp-template my-mcp-server
+   cd my-mcp-server
+   rm -rf .git && git init
+   ```
+
+### Rename the Project
+
+After creating your project, rename it from `fastmcp-template` to your project name:
+
+#### 1. Update `pyproject.toml`
+
+```toml
+[project]
+name = "my-mcp-server"  # Your project name
+version = "0.0.1"
+description = "Your project description"
+authors = [{ name = "Your Name", email = "you@example.com" }]
+
+[project.scripts]
+my-mcp-server = "app.__main__:app"  # Your CLI command
+```
+
+#### 2. Update Docker images in `docker-compose.yml`
+
+```yaml
+services:
+  my-mcp-server:
+    image: ghcr.io/your-org/my-mcp-server:latest
+```
+
+#### 3. Update `docker/Dockerfile.base` labels
+
+```dockerfile
+LABEL org.opencontainers.image.source="https://github.com/your-org/my-mcp-server"
+```
+
+#### 4. Update `app/server.py`
+
+```python
+mcp = FastMCP(
+    name="My MCP Server",  # Your server name
+    instructions="Your server description...",
+)
+
+_cache = RefCache(
+    name="my-mcp-server",  # Your cache namespace
+    ...
+)
+```
+
+#### 5. Update GitHub workflows
+
+In `.github/workflows/release.yml`:
+```yaml
+env:
+  APP_IMAGE_NAME: ${{ github.repository_owner }}/my-mcp-server
+  BASE_IMAGE_NAME: ${{ github.repository_owner }}/my-mcp-base
+```
+
+#### 6. Update Zed/Editor settings
+
+In `.zed/settings.json`, update the context server name and command.
+
+### Add Your Tools
+
+Create new tool modules in `app/tools/`:
+
+```python
+# app/tools/my_feature.py
+from pydantic import BaseModel, Field
+
+class MyInput(BaseModel):
+    """Input for my tool."""
+    query: str = Field(description="The query to process")
+
+async def my_tool(query: str) -> dict:
+    """Process a query and return results."""
+    # Your business logic here
+    return {"result": f"Processed: {query}"}
+```
+
+Then register in `app/tools/__init__.py` and `app/server.py`:
+
+```python
+# app/tools/__init__.py
+from app.tools.my_feature import MyInput, my_tool
+__all__ = [..., "MyInput", "my_tool"]
+
+# app/server.py
+from app.tools import my_tool
+mcp.tool(my_tool)
+```
+
+### Configure PyPI Publishing
+
+1. Go to [PyPI Trusted Publishers](https://pypi.org/manage/account/publishing/)
+2. Add a new pending publisher:
+   - Project name: `my-mcp-server`
+   - Owner: `your-github-username`
+   - Repository: `my-mcp-server`
+   - Workflow: `publish.yml`
+   - Environment: `pypi`
+
 ## Features
 
 - **Reference-Based Caching** - Return references instead of large data, reducing context window usage
@@ -9,7 +122,7 @@ A production-ready FastMCP server template with [mcp-refcache](https://github.co
 - **Pagination** - Navigate large datasets without loading everything at once
 - **Access Control** - Separate user and agent permissions for sensitive data
 - **Private Computation** - Let agents compute with values they cannot see
-- **Docker Ready** - Production-ready containers with Chainguard secure base image
+- **Docker Ready** - Production-ready containers with Python slim base image
 - **Optional Langfuse Tracing** - Built-in observability integration
 
 ## Quick Start
@@ -36,16 +149,30 @@ uv run fastmcp-template
 uv run fastmcp-template --transport sse --port 8000
 ```
 
+### Install from PyPI
+
+```bash
+# Run directly with uvx (no install needed)
+uvx fastmcp-template stdio
+
+# Or install globally
+uv tool install fastmcp-template
+fastmcp-template --help
+```
+
 ### Docker Deployment
 
 ```bash
-# Build and run with Docker Compose
+# Pull and run from GHCR
+docker pull ghcr.io/l4b4r4b4b4/fastmcp-template:latest
+docker run -p 8000:8000 ghcr.io/l4b4r4b4b4/fastmcp-template:latest
+
+# Or build locally with Docker Compose
 docker compose up
 
-# Or build images manually
-docker build -f docker/Dockerfile.base -t fastmcp-base:latest .
-docker build -f docker/Dockerfile -t fastmcp-template:latest .
-docker run -p 8000:8000 fastmcp-template:latest
+# Build images manually
+docker compose --profile build build base
+docker compose build
 ```
 
 ### Using with Claude Desktop
@@ -120,7 +247,7 @@ fastmcp-template/
 │   ├── server.py            # Main server with example tools
 │   └── tools/               # Additional tool modules
 ├── docker/
-│   ├── Dockerfile.base      # Chainguard-based secure base image
+│   ├── Dockerfile.base      # Python slim base image with dependencies
 │   ├── Dockerfile           # Production image (extends base)
 │   └── Dockerfile.dev       # Development with hot reload
 ├── tests/
@@ -128,9 +255,9 @@ fastmcp-template/
 │   └── test_server.py       # Server tests
 ├── .github/
 │   └── workflows/
-│       ├── ci.yml           # CI pipeline
-│       ├── docker.yml       # Docker build & publish to GHCR
-│       └── release.yml      # Release automation
+│       ├── ci.yml           # CI pipeline (lint, test, security)
+│       ├── publish.yml      # PyPI trusted publisher
+│       └── release.yml      # Docker build & publish to GHCR
 ├── docker-compose.yml       # Local development & production
 ├── pyproject.toml           # Project config
 ├── flake.nix                # Nix dev shell
@@ -207,15 +334,20 @@ nix develop  # Enter dev shell with all tools
 | `LANGFUSE_SECRET_KEY` | Langfuse secret key | - |
 | `LANGFUSE_HOST` | Langfuse host URL | `https://cloud.langfuse.com` |
 
-### CLI Options
+### CLI Commands
 
 ```bash
-uv run fastmcp-template --help
+uvx fastmcp-template --help
 
-Options:
-  --transport {stdio,sse}  Transport mode (default: stdio)
-  --port PORT              Port for SSE transport (default: 8000)
-  --host HOST              Host for SSE transport (default: 127.0.0.1)
+Commands:
+  stdio             Start server in stdio mode (for Claude Desktop and local CLI)
+  sse               Start server in SSE mode (Server-Sent Events)
+  streamable-http   Start server in streamable HTTP mode (recommended for remote/Docker)
+
+# Examples:
+uvx fastmcp-template stdio                          # Local CLI mode
+uvx fastmcp-template sse --port 8000                # SSE on port 8000
+uvx fastmcp-template streamable-http --host 0.0.0.0 # Docker/remote mode
 ```
 
 ## Test Prompts

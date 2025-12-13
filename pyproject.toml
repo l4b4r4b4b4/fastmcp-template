@@ -1,6 +1,6 @@
 [project]
 name = "fastmcp-template"
-version = "0.0.2"
+version = "0.0.3"
 description = "FastMCP server template with mcp-refcache and Langfuse tracing"
 readme = "README.md"
 authors = [
