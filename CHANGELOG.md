@@ -5,9 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.0.2] - 2024-12-14
 
-## [0.0.1] - 2024-12-09
+### Fixed
+
+- **Docker image**: Replace Chainguard with `python:slim` base image
+  - Chainguard free tier only offers Python 3.14
+  - Langfuse doesn't support Python 3.14 yet (pydantic v1 compatibility)
+- **Version detection**: Handle `PackageNotFoundError` when running from source
+  - Falls back to `0.0.0-dev` for Docker source-copy builds
+
+### Changed
+
+- **Python support**: Drop Python 3.14 from CI matrix (3.12 and 3.13 only)
+- **Docker**: Add `PYTHON_VERSION` build arg (default: 3.12)
+- **Zed settings**: Use `uvx fastmcp-template stdio` (PyPI install)
+
+## [0.0.1] - 2024-12-14
 
 ### Added
 
@@ -40,4 +54,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Project rules for AI coding assistants
 
 [Unreleased]: https://github.com/l4b4r4b4b4/fastmcp-template/compare/v0.0.1...HEAD
+[0.0.2]: https://github.com/l4b4r4b4b4/fastmcp-template/releases/tag/v0.0.2
 [0.0.1]: https://github.com/l4b4r4b4b4/fastmcp-template/releases/tag/v0.0.1
