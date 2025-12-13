@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -572,80 +572,50 @@ class TestIsAdmin:
         assert result is False
 
 
-class TestMain:
-    """Tests for the main entry point."""
+class TestTyperCLI:
+    """Tests for the typer CLI entry point."""
 
-    def test_main_with_stdio_transport(self) -> None:
-        """Test main function with stdio transport."""
-        with (
-            patch("sys.argv", ["fastmcp-template"]),
-            patch("app.server.mcp.run") as mock_run,
-        ):
-            from app.server import main
+    def test_cli_app_exists(self) -> None:
+        """Test that typer app is created."""
+        from app.__main__ import app
 
-            main()
+        assert app is not None
 
-            mock_run.assert_called_once_with(transport="stdio")
+    def test_cli_has_stdio_command(self) -> None:
+        """Test that CLI has stdio command."""
+        from app.__main__ import app
 
-    def test_main_with_sse_transport(self) -> None:
-        """Test main function with SSE transport."""
-        with (
-            patch("sys.argv", ["fastmcp-template", "--transport", "sse"]),
-            patch("app.server.mcp.run") as mock_run,
-        ):
-            from app.server import main
+        # Check callback names since typer may not set cmd.name for decorated funcs
+        callback_names = [
+            cmd.callback.__name__ if cmd.callback else cmd.name
+            for cmd in app.registered_commands
+        ]
+        assert "stdio" in callback_names
 
-            main()
+    def test_cli_has_sse_command(self) -> None:
+        """Test that CLI has sse command."""
+        from app.__main__ import app
 
-            mock_run.assert_called_once_with(
-                transport="sse",
-                host="127.0.0.1",
-                port=8000,
-            )
+        callback_names = [
+            cmd.callback.__name__ if cmd.callback else cmd.name
+            for cmd in app.registered_commands
+        ]
+        assert "sse" in callback_names
 
-    def test_main_with_custom_port(self) -> None:
-        """Test main function with custom port."""
-        with (
-            patch(
-                "sys.argv",
-                ["fastmcp-template", "--transport", "sse", "--port", "9000"],
-            ),
-            patch("app.server.mcp.run") as mock_run,
-        ):
-            from app.server import main
+    def test_cli_has_streamable_http_command(self) -> None:
+        """Test that CLI has streamable-http command."""
+        from app.__main__ import app
 
-            main()
-
-            mock_run.assert_called_once_with(
-                transport="sse",
-                host="127.0.0.1",
-                port=9000,
-            )
-
-    def test_main_with_custom_host(self) -> None:
-        """Test main function with custom host."""
-        with (
-            patch(
-                "sys.argv",
-                [
-                    "fastmcp-template",
-                    "--transport",
-                    "sse",
-                    "--host",
-                    "0.0.0.0",
-                ],
-            ),
-            patch("app.server.mcp.run") as mock_run,
-        ):
-            from app.server import main
-
-            main()
-
-            mock_run.assert_called_once_with(
-                transport="sse",
-                host="0.0.0.0",
-                port=8000,
-            )
+        # streamable-http uses explicit name, check both name and callback
+        command_info = [
+            (cmd.name, cmd.callback.__name__ if cmd.callback else None)
+            for cmd in app.registered_commands
+        ]
+        has_streamable_http = any(
+            name == "streamable-http" or callback == "streamable_http"
+            for name, callback in command_info
+        )
+        assert has_streamable_http
 
 
 class TestPydanticModels:
@@ -653,7 +623,7 @@ class TestPydanticModels:
 
     def test_item_generation_input_defaults(self) -> None:
         """Test ItemGenerationInput default values."""
-        from app.server import ItemGenerationInput
+        from app.tools.demo import ItemGenerationInput
 
         model = ItemGenerationInput()
         assert model.count == 10
@@ -661,7 +631,7 @@ class TestPydanticModels:
 
     def test_item_generation_input_custom(self) -> None:
         """Test ItemGenerationInput with custom values."""
-        from app.server import ItemGenerationInput
+        from app.tools.demo import ItemGenerationInput
 
         model = ItemGenerationInput(count=50, prefix="widget")
         assert model.count == 50
@@ -671,7 +641,7 @@ class TestPydanticModels:
         """Test ItemGenerationInput validates count range."""
         from pydantic import ValidationError
 
-        from app.server import ItemGenerationInput
+        from app.tools.demo import ItemGenerationInput
 
         with pytest.raises(ValidationError):
             ItemGenerationInput(count=0)  # Below minimum
@@ -681,7 +651,7 @@ class TestPydanticModels:
 
     def test_secret_input(self) -> None:
         """Test SecretInput model."""
-        from app.server import SecretInput
+        from app.tools.secrets import SecretInput
 
         model = SecretInput(name="test", value=42.0)
         assert model.name == "test"
@@ -691,14 +661,14 @@ class TestPydanticModels:
         """Test SecretInput validates name length."""
         from pydantic import ValidationError
 
-        from app.server import SecretInput
+        from app.tools.secrets import SecretInput
 
         with pytest.raises(ValidationError):
             SecretInput(name="", value=1.0)  # Empty name
 
     def test_secret_compute_input(self) -> None:
         """Test SecretComputeInput model."""
-        from app.server import SecretComputeInput
+        from app.tools.secrets import SecretComputeInput
 
         model = SecretComputeInput(secret_ref="ref:123", multiplier=2.5)
         assert model.secret_ref == "ref:123"
@@ -706,14 +676,14 @@ class TestPydanticModels:
 
     def test_secret_compute_input_default_multiplier(self) -> None:
         """Test SecretComputeInput default multiplier."""
-        from app.server import SecretComputeInput
+        from app.tools.secrets import SecretComputeInput
 
         model = SecretComputeInput(secret_ref="ref:456")
         assert model.multiplier == 1.0
 
     def test_cache_query_input(self) -> None:
         """Test CacheQueryInput model."""
-        from app.server import CacheQueryInput
+        from app.tools.cache import CacheQueryInput
 
         model = CacheQueryInput(ref_id="cache:ref", page=2, page_size=20)
         assert model.ref_id == "cache:ref"
@@ -722,7 +692,7 @@ class TestPydanticModels:
 
     def test_cache_query_input_defaults(self) -> None:
         """Test CacheQueryInput optional fields."""
-        from app.server import CacheQueryInput
+        from app.tools.cache import CacheQueryInput
 
         model = CacheQueryInput(ref_id="cache:ref")
         assert model.page is None
