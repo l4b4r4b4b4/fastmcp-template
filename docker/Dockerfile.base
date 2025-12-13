@@ -4,9 +4,9 @@
 # A secure, minimal base image for FastMCP servers with mcp-refcache.
 # Other FastMCP servers can extend this image with their own app/ code.
 #
-# Build (requires GitHub token for private mcp-refcache repo):
-#   GITHUB_TOKEN=$GITHUB_TOKEN docker build -f docker/Dockerfile.base \
-#     --secret id=github_token,env=GITHUB_TOKEN \
+# Build:
+#   docker build -f docker/Dockerfile.base \
+#     --build-arg PYTHON_VERSION=3.12 \
 #     -t fastmcp-base:latest .
 #
 # Publish to GHCR:
@@ -16,14 +16,18 @@
 # Usage in other projects:
 #   FROM ghcr.io/l4b4r4b4b4/fastmcp-base:latest
 #   COPY app/ /app/app/
-#   CMD ["uv", "run", "fastmcp-template", "streamable-http"]
+#   CMD ["python", "-m", "app", "streamable-http"]
 # ==============================================================================
+
+# Build argument for Python version (default: 3.12)
+# Supports 3.12 and 3.13 (3.14 not yet supported by langfuse)
+ARG PYTHON_VERSION=3.12
 
 # ==============================================================================
 # Stage 1: Builder
 # Uses standard Python image for building (has pip, gcc, etc.)
 # ==============================================================================
-FROM python:3.12-slim AS builder
+FROM python:${PYTHON_VERSION}-slim AS builder
 
 # Install uv for fast dependency management
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
@@ -58,37 +62,40 @@ RUN --mount=type=secret,id=github_token \
     git config --global --unset-all url.https://${GITHUB_TOKEN}@github.com/.insteadOf 2>/dev/null || true
 
 # ==============================================================================
-# Stage 2: Runtime (Chainguard - Security Hardened)
-# Minimal attack surface, no shell, signed images, daily CVE patches
+# Stage 2: Runtime (Python Slim - Minimal and Compatible)
 # ==============================================================================
-FROM cgr.dev/chainguard/python:latest AS runtime
+FROM python:${PYTHON_VERSION}-slim AS runtime
 
-# Chainguard images run as non-root by default (uid 65532)
-# No need to create user - it's already set up securely
+# Re-declare ARG after FROM to use in this stage
+ARG PYTHON_VERSION=3.12
+
+# Create non-root user for security
+RUN useradd --create-home --uid 1000 appuser
 
 WORKDIR /app
 
-# Copy uv from official image for fast, reliable package execution
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
-
 # Copy virtual environment from builder
-# Chainguard Python expects packages in /home/nonroot/.local or similar
-# We use /opt/venv and add to PATH
 COPY --from=builder /opt/venv /opt/venv
 
+# Set ownership
+RUN chown -R appuser:appuser /app
+
+# Switch to non-root user
+USER appuser
+
 # Set environment variables
-ENV PATH="/usr/local/bin:/opt/venv/bin:$PATH"
+ENV PATH="/opt/venv/bin:$PATH"
 ENV PYTHONPATH="/app"
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
-# Default port for SSE transport
+# Default port for HTTP transport
 EXPOSE 8000
 
 # Labels for container metadata
 LABEL org.opencontainers.image.source="https://github.com/l4b4r4b4b4/fastmcp-template"
 LABEL org.opencontainers.image.description="FastMCP Base Image with mcp-refcache"
 LABEL org.opencontainers.image.licenses="MIT"
-LABEL org.opencontainers.image.base.name="cgr.dev/chainguard/python:latest"
+LABEL org.opencontainers.image.base.name="python:${PYTHON_VERSION}-slim"
 
 # No CMD - this is a base image, child images set their own entrypoint
