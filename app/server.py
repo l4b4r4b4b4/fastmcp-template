@@ -82,7 +82,7 @@ _cache = RefCache(
     name="fastmcp-template",
     default_ttl=3600,  # 1 hour TTL
     preview_config=PreviewConfig(
-        max_size=64,  # Max 64 tokens in previews
+        max_size=2048,  # Max 2048 tokens in previews
         default_strategy=PreviewStrategy.SAMPLE,  # Sample large collections
     ),
 )

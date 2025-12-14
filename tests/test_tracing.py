@@ -205,7 +205,7 @@ class TestTracedRefCache:
             name="test-cache",
             default_ttl=3600,
             preview_config=PreviewConfig(
-                max_size=64,
+                max_size=2048,
                 default_strategy=PreviewStrategy.SAMPLE,
             ),
         )
@@ -218,7 +218,7 @@ class TestTracedRefCache:
     def test_preview_config_property(self) -> None:
         """Test preview_config property delegates to base cache."""
         assert self.traced_cache.preview_config is not None
-        assert self.traced_cache.preview_config.max_size == 64
+        assert self.traced_cache.preview_config.max_size == 2048
 
     def test_getattr_delegates_to_base(self) -> None:
         """Test unknown attributes delegate to base cache."""
@@ -358,7 +358,7 @@ class TestTracedRefCacheWithMockedLangfuse:
             name="test-cache-mocked",
             default_ttl=3600,
             preview_config=PreviewConfig(
-                max_size=64,
+                max_size=2048,
                 default_strategy=PreviewStrategy.SAMPLE,
             ),
         )
