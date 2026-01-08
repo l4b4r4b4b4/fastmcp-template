@@ -1,7 +1,7 @@
-# Goal 02: FastMCP Template Scaffolding Script
+W# Goal 02: Convert FastMCP Template to Cookiecutter Format
 
-**Status:** ⚪ Not Started
-**Priority:** Medium
+**Status:** 🟡 In Progress
+**Priority:** High
 **Created:** 2025-01-08
 **Last Updated:** 2025-01-08
 
@@ -9,7 +9,9 @@
 
 ## Overview
 
-Create a CLI scaffolding script (similar to `create-react-app`) that automates the cleanup and customization of the fastmcp-template repository when starting a new project. This eliminates repetitive manual steps like removing demo tools, updating server names, cleaning up documentation, and configuring project-specific settings.
+Convert the fastmcp-template repository to Cookiecutter format to automate project generation and customization. This eliminates repetitive manual steps by using the battle-tested Cookiecutter tool (5M downloads/month) instead of building custom scaffolding. Users answer prompts, Cookiecutter generates a clean project with demo tools optionally excluded at generation time.
+
+**Key Decision:** After researching existing solutions (Cookiecutter, Copier, Cruft, PyScaffold), we chose Cookiecutter because our needs are simple templating, not complex code transformation.
 
 ---
 
@@ -41,11 +43,11 @@ When starting a new MCP server project from fastmcp-template:
 ## Objectives
 
 ### Primary Goals
-1. **Automation** - Single command to scaffold a clean project
-2. **Consistency** - Every new project starts from the same clean baseline
-3. **Speed** - Reduce setup time from 15-30 minutes to <2 minutes
-4. **Safety** - Preserve project structure, don't break existing files
-5. **Flexibility** - Support different project types (HTTP API, stdio, etc.)
+1. **Use Existing Tools** - Leverage Cookiecutter instead of reinventing
+2. **Template Variables** - Project name, description, author via Jinja2
+3. **Conditional Inclusion** - Demo tools optional (`include_demo_tools`)
+4. **Post-Generation Automation** - Run `uv sync`, `git init` via hooks
+5. **Fast Setup** - Reduce setup time from 30 minutes to 1-2 minutes
 
 ### Success Criteria
 - [ ] Script executes in <30 seconds
@@ -66,194 +68,290 @@ When starting a new MCP server project from fastmcp-template:
 ### Desired Usage
 
 ```bash
-# Install globally (once)
-pip install fastmcp-create
+# Install Cookiecutter (one-time)
+uv tool install cookiecutter
 # or
-pipx install fastmcp-create
+pipx install cookiecutter
 
-# Create new project
-fastmcp-create my-mcp-server
+# Create new project from template
+cookiecutter gh:l4b4r4b4b4/fastmcp-template
 
 # Interactive prompts:
-# - Project name: my-mcp-server
-# - Description: My awesome MCP server
-# - Author: Your Name <you@example.com>
-# - Server type: [stdio | http | both] (default: stdio)
-# - Initialize git? [y/N]
-# - Install dependencies? [Y/n]
+# project_name [FastMCP Template]: Optimization MCP
+# project_slug [optimization-mcp]: <press Enter>
+# project_description: Mathematical optimization server using CVXPY
+# author_name [Your Name]: Luke Smith
+# author_email [you@example.com]: luke@example.com
+# python_version [3.12]: <press Enter>
+# include_demo_tools [no]: <press Enter>
+# include_langfuse [yes]: <press Enter>
+# github_username [yourusername]: l4b4r4b4b4
 
-# Output:
-# ✓ Created project directory: ./my-mcp-server
-# ✓ Cleaned up demo tools
-# ✓ Updated server configuration
-# ✓ Updated project metadata
-# ✓ Removed demo tests
-# ✓ Cleaned documentation
+# Cookiecutter generates project and runs post-gen hook:
+# ✓ Created project directory: ./optimization-mcp
+# ✓ Rendered all templates with your values
+# ✓ Excluded demo tools (include_demo_tools=no)
+# ✓ Running post-generation hooks...
+# ✓ Installed dependencies with uv sync
 # ✓ Initialized git repository
-# ✓ Installed dependencies
+# ✓ Created initial commit
 #
 # Next steps:
-#   cd my-mcp-server
+#   cd optimization-mcp
 #   uv run pytest
-#   uv run my-mcp-server stdio
+#   uv run optimization-mcp stdio
 #
 # Your FastMCP server is ready! 🚀
 ```
 
-### Alternative: In-Place Cleanup
+### Example: With Demo Tools
 
 ```bash
-# For when you've already cloned the template
-cd my-existing-project
-fastmcp-init
+# If you want to keep demo tools for reference:
+cookiecutter gh:l4b4r4b4b4/fastmcp-template
 
-# Interactive prompts same as above
-# Cleans up current directory instead of creating new one
+# When prompted:
+# include_demo_tools [no]: yes
+
+# Generated project will include:
+# - app/tools/demo.py (hello, generate_items)
+# - Demo tool tests
+# - Demo examples in prompts
 ```
 
 ---
 
 ## Technical Design
 
-### Script Structure
+### Cookiecutter Template Structure
 
 ```
-fastmcp-create/
-├── pyproject.toml           # Package metadata
-├── README.md                # Usage documentation
-├── src/
-│   └── fastmcp_create/
-│       ├── __init__.py
-│       ├── __main__.py      # CLI entry point
-│       ├── cli.py           # CLI interface (typer)
-│       ├── scaffold.py      # Main scaffolding logic
-│       ├── templates.py     # Template file generators
-│       ├── cleanup.py       # Demo tool removal
-│       ├── config.py        # Configuration management
-│       └── utils.py         # File operations, validation
-└── tests/
-    ├── test_scaffold.py
-    ├── test_cleanup.py
-    └── fixtures/            # Test templates
+fastmcp-template/                    # Repository root
+├── cookiecutter.json                # Template configuration & prompts
+├── hooks/                           # Pre/post generation scripts
+│   ├── pre_gen_project.py          # Validation before generation
+│   └── post_gen_project.py         # Run uv sync, git init, cleanup
+├── {{cookiecutter.project_slug}}/   # Template directory (gets copied)
+│   ├── .agent/
+│   │   └── goals/
+│   │       └── 00-Template-Goal/   # Only template goal (not our dev goals)
+│   ├── app/
+│   │   ├── server.py               # Uses {{ cookiecutter.project_name }}
+│   │   ├── __init__.py
+│   │   └── tools/
+│   │       ├── __init__.py
+│   │       {% if cookiecutter.include_demo_tools == 'yes' %}
+│   │       ├── demo.py             # Conditionally included
+│   │       {% endif %}
+│   │       ├── cache.py
+│   │       ├── context.py
+│   │       └── secrets.py
+│   ├── tests/
+│   │   ├── conftest.py
+│   │   └── test_server.py          # Demo tests conditionally included
+│   ├── docker/
+│   ├── .github/workflows/
+│   ├── pyproject.toml               # Templated with variables
+│   ├── README.md                    # Project-specific content
+│   └── ...
+└── .agent/                          # Our development (NOT copied!)
+    ├── scratchpad.md
+    └── goals/
+        ├── 01-*/
+        ├── 02-*/                    # This goal
+        └── scratchpad.md
 ```
 
-### Core Components
+### Cookiecutter Configuration
 
-#### 1. CLI Interface (`cli.py`)
-- Uses `typer` for interactive CLI
-- Two commands: `create` (new dir) and `init` (in-place)
-- Interactive prompts with validation
-- Progress indicators during long operations
+**cookiecutter.json:**
+```json
+{
+  "project_name": "FastMCP Template",
+  "project_slug": "{{ cookiecutter.project_name.lower().replace(' ', '-') }}",
+  "project_description": "A FastMCP server with RefCache integration",
+  "author_name": "Your Name",
+  "author_email": "you@example.com",
+  "python_version": "3.12",
+  "include_demo_tools": ["no", "yes"],
+  "include_langfuse": ["yes", "no"],
+  "github_username": "yourusername"
+}
+```
 
-#### 2. Scaffolding Engine (`scaffold.py`)
-- Orchestrates all cleanup/setup steps
-- Atomic operations (rollback on failure)
-- Progress reporting
-- Post-scaffold verification
+### Post-Generation Hook
 
-#### 3. Demo Tool Cleanup (`cleanup.py`)
-- Removes demo tools from `app/server.py`
-- Removes demo tool implementations
-- Removes demo tests from `tests/test_server.py`
-- Updates `app/prompts/__init__.py`
-- Updates `app/tools/__init__.py` exports
+**hooks/post_gen_project.py:**
+```python
+#!/usr/bin/env python
+"""Post-generation hook to set up the project."""
+import subprocess
+import sys
+from pathlib import Path
 
-#### 4. Template Generator (`templates.py`)
-- Generates starter `server.py` with minimal tools
-- Generates README with project-specific content
-- Generates updated prompts
-- Generates starter tool structure (optional)
+def main():
+    project_root = Path.cwd()
 
-#### 5. Configuration (`config.py`)
-- Project metadata (name, description, author)
-- Server type (stdio, http, both)
-- Optional features (tracing, cache namespaces)
-- Validation and defaults
+    print("🔧 Running post-generation setup...")
+
+    # Install dependencies
+    print("📦 Installing dependencies with uv...")
+    subprocess.run(["uv", "sync"], check=True)
+
+    # Initialize git
+    print("🔀 Initializing git repository...")
+    subprocess.run(["git", "init"], check=True)
+    subprocess.run(["git", "add", "."], check=True)
+    subprocess.run([
+        "git", "commit", "-m",
+        "Initial commit from fastmcp-template"
+    ], check=True)
+
+    print("✅ Project setup complete!")
+    print(f"\nNext steps:")
+    print(f"  cd {project_root.name}")
+    print(f"  uv run pytest")
+    print(f"  uv run {project_root.name} stdio")
+
+if __name__ == "__main__":
+    main()
+```
 
 ---
 
 ## Implementation Tasks
 
-### Task 01: Project Setup & CLI Framework
-**Goal:** Create package structure and basic CLI interface
+### Task 01: Create cookiecutter.json Configuration
+**Goal:** Define template variables and prompts
 
 **Subtasks:**
-- [ ] Create `fastmcp-create` package structure
-- [ ] Set up `pyproject.toml` with dependencies (typer, rich, jinja2)
-- [ ] Create CLI entry points (`fastmcp-create`, `fastmcp-init`)
-- [ ] Implement basic `typer` command structure
-- [ ] Add `--help` documentation
-- [ ] Write initial tests for CLI parsing
+- [ ] Create `cookiecutter.json` at repository root
+- [ ] Define all template variables (project_name, slug, description, etc.)
+- [ ] Set sensible defaults
+- [ ] Add validation rules (if needed)
+- [ ] Test locally with `cookiecutter .`
 
-**Dependencies:**
-- `typer[all]` - CLI framework with rich output
-- `rich` - Beautiful terminal output
-- `jinja2` - Template rendering
-- `pyyaml` - Configuration files (optional)
-- `questionary` - Enhanced interactive prompts (alternative to typer)
+**Template Variables:**
+- project_name (display name)
+- project_slug (auto-generated from name)
+- project_description
+- author_name, author_email
+- python_version
+- include_demo_tools (yes/no)
+- include_langfuse (yes/no)
+- github_username
 
-**Estimated Effort:** 2-3 hours
+**Estimated Effort:** 1 hour
 
 ---
 
-### Task 02: File Operation Utilities
-**Goal:** Safe file manipulation with rollback support
+### Task 02: Restructure Repository for Cookiecutter
+**Goal:** Move current content into template directory
 
 **Subtasks:**
-- [ ] Implement atomic file operations (copy, move, delete)
-- [ ] Create backup/restore mechanism
-- [ ] Add path validation and safety checks
-- [ ] Implement rollback on error
-- [ ] Write tests for file operations
+- [ ] Create `{{cookiecutter.project_slug}}/` directory
+- [ ] Move all app code into template directory
+- [ ] Keep `.agent/goals/01-*`, `02-*`, etc. at root (our dev goals)
+- [ ] Copy `.agent/goals/00-Template-Goal/` into template (for users)
+- [ ] Update `.gitignore` if needed
+- [ ] Verify structure matches Cookiecutter pattern
 
-**Key Functions:**
+**Directory Structure After:**
+```
+fastmcp-template/
+├── cookiecutter.json
+├── hooks/
+├── {{cookiecutter.project_slug}}/  # User's project
+│   ├── .agent/
+│   │   └── goals/
+│   │       └── 00-Template-Goal/
+│   ├── app/
+│   ├── tests/
+│   └── ...
+└── .agent/                          # Our development
+    └── goals/
+        ├── 01-*/
+        └── 02-*/
+```
+
+**Estimated Effort:** 1 hour
+
+---
+
+### Task 03: Convert Files to Jinja2 Templates
+**Goal:** Add template variables to all project files
+
+**Subtasks:**
+- [ ] Add `{% if cookiecutter.include_demo_tools == 'yes' %}` blocks
+- [ ] Wrap demo tool imports in conditionals
+- [ ] Wrap demo tool registration in conditionals
+- [ ] Conditionally include `app/tools/demo.py` file
+- [ ] Conditionally include demo tests in `test_server.py`
+- [ ] Update `app/tools/__init__.py` exports conditionally
+- [ ] Test both with and without demos
+- [ ] Verify clean output when demos excluded
+
+**Files to update:**
+- app/server.py (imports, tool registration)
+- app/tools/__init__.py (exports)
+- app/tools/demo.py (entire file conditional)
+- tests/test_server.py (demo test classes)
+- app/prompts/__init__.py (demo examples)
+
+**Jinja2 patterns:**
 ```python
-def safe_copy(src: Path, dst: Path) -> None
-def safe_move(src: Path, dst: Path) -> None
-def safe_delete(path: Path) -> None
-def backup_project(project_path: Path) -> Path
-def restore_backup(backup_path: Path, project_path: Path) -> None
+{% if cookiecutter.include_demo_tools == 'yes' %}
+from app.tools import hello, generate_items
+{% endif %}
+
+{% if cookiecutter.include_demo_tools == 'yes' %}
+mcp.tool(hello)
+{% endif %}
 ```
 
 **Estimated Effort:** 2-3 hours
 
 ---
+</text>
 
-### Task 03: Demo Tool Cleanup Logic
-**Goal:** Remove all demo tool references from template
+<old_text line=260>
+### Task 04: Template Generation
+**Goal:** Jinja2 templating for all project files
 
 **Subtasks:**
-- [ ] Parse and clean `app/server.py`:
-  - Remove demo tool imports
-  - Remove tool registration (@mcp.tool decorators)
-  - Remove cached tool functions
-  - Update server instructions
-- [ ] Clean `app/prompts/__init__.py`:
-  - Remove demo tool examples
-  - Replace with generic starter text
-- [ ] Clean `tests/test_server.py`:
-  - Remove TestHelloTool, TestGenerateItems, etc.
-  - Update assertions for new server name
-- [ ] Clean `app/tools/` directory:
-  - Remove `demo.py`, `secrets.py` (if present)
-  - Update `__init__.py` exports
-- [ ] Write comprehensive tests
+- [ ] Set up Jinja2 environment
+- [ ] Create template context from user input
+- [ ] Render all project files with substitutions
+- [ ] Handle conditional file inclusion
+- [ ] Special handling for binary files (keep as-is)
+- [ ] Write tests for template rendering
 
-**Key Functions:**
+**Template Variables:**
 ```python
-def remove_demo_tools_from_server(server_py: Path) -> None
-def clean_prompt_templates(prompts_init: Path) -> None
-def remove_demo_tests(test_server_py: Path) -> None
-def clean_tool_exports(tools_init: Path) -> None
+{
+    "project_name": "Optimization MCP",
+    "project_slug": "optimization-mcp",
+    "project_description": "...",
+    "author_name": "Luke Smith",
+    "author_email": "luke@example.com",
+    "python_version": "3.12",
+    "include_demos": False,
+    "include_langfuse": True,
+    "github_username": "l4b4r4b4b4",
+    "year": 2025,
+}
 ```
 
-**AST Manipulation:**
-- Use `ast` module to parse Python files
-- Remove specific function/class definitions
-- Remove import statements
-- Regenerate clean Python code
+**Files to Template:**
+- pyproject.toml
+- app/server.py
+- app/__init__.py
+- README.md
+- docker-compose.yml
+- docker/Dockerfile.base
+- .github/workflows/*.yml
 
-**Estimated Effort:** 4-6 hours
+**Estimated Effort:** 3-4 hours
 
 ---
 
