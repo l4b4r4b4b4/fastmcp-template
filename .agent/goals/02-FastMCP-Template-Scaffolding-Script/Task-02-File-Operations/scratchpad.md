@@ -16,6 +16,182 @@ Implement safe, atomic file operations with rollback support for the scaffolding
 
 ## Context & Research
 
+### Problem Space: What Are We Building?
+
+**Core Requirements:**
+1. Scaffold new MCP projects from fastmcp-template
+2. Remove demo tools and replace with user's tools
+3. Update project metadata (name, description, dependencies)
+4. Safe file operations with rollback on error
+5. Git initialization and optional first commit
+
+**Key Challenges:**
+- AST manipulation to remove specific Python functions/classes
+- Template variable substitution (project name, descriptions)
+- Dependency management (add/remove packages)
+- Atomic operations with rollback
+- Cross-platform compatibility
+
+**Success Criteria:**
+- User runs one command, gets clean project ready to develop
+- No demo code remains
+- All references updated (pyproject.toml, Docker, CI/CD)
+- Can scaffold multiple projects without conflicts
+- Errors don't leave partial/broken projects
+
+---
+
+### Solution Space Research: Existing Tools
+
+**Industry-Standard Templating Solutions:**
+
+#### **1. Cookiecutter** (5M downloads/month) 🏆
+- **What:** Industry standard for Python project templates
+- **How:** Jinja2 templating + pre/post generation hooks
+- **Pros:**
+  - Battle-tested with millions of users
+  - Massive ecosystem of templates
+  - Hooks for custom logic (cleanup, git init, etc.)
+  - Works with Git repos, local paths
+- **Cons:**
+  - Pre/post hooks can be complex
+  - No built-in template update mechanism
+  - Demo cleanup would need custom hook scripts
+- **Use case:** Perfect for initial project generation
+
+#### **2. Copier** (817K downloads/month) 🚀
+- **What:** Modern alternative with template updates
+- **How:** YAML config + Jinja2 + migration tasks
+- **Pros:**
+  - Can update existing projects when template changes
+  - Built-in task system for post-generation
+  - Better UX than Cookiecutter
+  - Maintains link to template
+- **Cons:**
+  - Smaller ecosystem than Cookiecutter
+  - More complex for simple use cases
+- **Use case:** When template updates are needed
+
+#### **3. Cruft** (built on Cookiecutter)
+- **What:** Adds update capability to Cookiecutter
+- **How:** Wraps Cookiecutter, tracks template version
+- **Pros:**
+  - Check if project out of sync with template
+  - Update existing projects
+  - Uses Cookiecutter templates
+- **Cons:**
+  - Extra layer of complexity
+  - Still needs Cookiecutter ecosystem
+- **Use case:** Cookiecutter + update support
+
+#### **4. PyScaffold**
+- **What:** Opinionated scientific Python scaffolding
+- **How:** Extension system, setuptools integration
+- **Pros:**
+  - Good for scientific Python
+  - Extension ecosystem
+- **Cons:**
+  - More opinionated
+  - Less flexible for custom templates
+- **Use case:** Scientific Python projects specifically
+
+---
+
+### Decision: Build Custom vs Use Existing?
+
+**Option A: Use Cookiecutter/Copier Directly**
+```bash
+# User workflow:
+cookiecutter gh:l4b4r4b4b4/fastmcp-template
+# Answer prompts
+# Template generates, runs post-gen hook to clean demos
+```
+
+**Pros:**
+- ✅ Zero maintenance (battle-tested)
+- ✅ Users may already know it
+- ✅ Rich ecosystem
+- ✅ Handles edge cases
+
+**Cons:**
+- ❌ Demo cleanup needs complex post-gen hooks
+- ❌ AST manipulation in shell hooks is awkward
+- ❌ Less integration with fastmcp ecosystem
+- ❌ Two-step process (cookiecutter + manual cleanup)
+
+**Option B: Build Thin Wrapper Around Copier**
+```bash
+uv run fastmcp-scaffold new optimization-mcp
+# Uses Copier internally, adds fastmcp-specific cleanup
+```
+
+**Pros:**
+- ✅ Best of both worlds (Copier + custom logic)
+- ✅ fastmcp-branded CLI
+- ✅ Can add fastmcp-specific features later
+
+**Cons:**
+- ❌ Dependency on Copier
+- ❌ Need to maintain wrapper
+- ❌ Users need to learn our CLI
+
+**Option C: Build From Scratch (Original Plan)**
+```bash
+uv run fastmcp-scaffold new optimization-mcp --clean-demos
+# Custom Python tool, full control
+```
+
+**Pros:**
+- ✅ Perfect fit for our use case
+- ✅ Full control over logic
+- ✅ No external template tool dependency
+
+**Cons:**
+- ❌ Reinventing the wheel
+- ❌ Will miss edge cases Cookiecutter handles
+- ❌ Maintenance burden
+- ❌ Cross-platform issues (Windows paths, etc.)
+
+---
+
+### Recommended Approach: **Option C with Lessons from Cookiecutter**
+
+**Why build custom:**
+1. Our use case is **unique** - not just templating, but **removing** demo code via AST
+2. Cookiecutter's strength is templates, not code transformation
+3. We want tight integration: `fastmcp-scaffold` → `fastmcp-template` → `mcp-refcache`
+4. Our tool is **opinionated** for fastmcp projects specifically
+5. Learning from Cookiecutter's battle scars is more valuable than using it
+
+**What we borrow from Cookiecutter/Copier:**
+- ✅ Jinja2 for template substitution (proven)
+- ✅ YAML config for template variables
+- ✅ Pre/post hooks concept (but in Python, not shell)
+- ✅ Transaction/rollback pattern
+- ✅ Cross-platform path handling patterns
+
+**What we do differently:**
+- 🔧 AST-based Python code cleanup (not regex/sed)
+- 🔧 Python-native hooks (not shell scripts)
+- 🔧 Built-in RefCache awareness
+- 🔧 Opinionated for MCP servers specifically
+
+**Implementation Strategy:**
+```python
+# Use proven libraries where appropriate:
+- jinja2: Template substitution (5M+ downloads/month)
+- pathlib: Cross-platform paths (stdlib)
+- ast: Python code manipulation (stdlib)
+- shutil: File operations (stdlib)
+
+# Build custom where needed:
+- Demo tool cleanup logic
+- Transaction log & rollback
+- MCP-specific validations
+```
+
+---
+
 ### Why Optimization MCP as Reference?
 
 Mathematical optimization servers are excellent reference examples because they:

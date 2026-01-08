@@ -194,11 +194,20 @@ UV is 10-100x faster, reproducible, follows PEP 621, single source of truth.
 
 ### Hard Rules: Development Process
 
-**Step 1: Gather Context**
-- Read relevant files (README, CONTRIBUTING, code)
-- Review appropriate scratchpad (`.agent/scratchpad.md`, goal scratchpad, or task scratchpad)
-- Research with available tools
-- Ask clarifying questions
+**Step 1: Gather Context & Research**
+- **Problem Space Research:**
+  - Understand the problem thoroughly before looking at solutions
+  - Read relevant files (README, CONTRIBUTING, existing code)
+  - Review appropriate scratchpad (`.agent/scratchpad.md`, goal scratchpad, or task scratchpad)
+  - Ask clarifying questions about requirements and constraints
+  - Define success criteria and edge cases
+- **Solution Space Research:**
+  - Research existing solutions and libraries (PyPI packages, GitHub repos)
+  - Compare download statistics, maintenance status, community adoption
+  - Evaluate alternatives (pros/cons, tradeoffs)
+  - Check if problem is already solved (don't reinvent the wheel)
+  - Look for industry standards and best practices
+- **Critical:** Complete problem understanding BEFORE solution design
 - MUST NOT jump to implementation without approval
 
 **Step 2: Document Plan**
