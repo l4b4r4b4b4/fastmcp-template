@@ -2,8 +2,8 @@
   "$schema": "zed://schemas/settings",
   "terminal": {
     "env": {
-      "PYTHONPATH": "./src"
-    }
+      "PYTHONPATH": "./src",
+    },
   },
   "lsp": {
     "pyright": {
@@ -12,47 +12,59 @@
         "python.analysis": {
           "extraPaths": ["src"],
           "diagnosticMode": "workspace",
-          "typeCheckingMode": "strict"
-        }
-      }
-    }
+          "typeCheckingMode": "strict",
+        },
+      },
+    },
   },
   "languages": {
     "Python": {
       "format_on_save": {
         "external": {
           "command": "ruff",
-          "arguments": ["format", "-"]
-        }
+          "arguments": ["format", "-"],
+        },
       },
-      "language_servers": ["pyright"]
-    }
+      "language_servers": ["pyright"],
+    },
   },
   "context_servers": {
     "nixos": {
       "command": "uvx",
-      "args": ["mcp-nixos"]
+      "args": ["mcp-nixos"],
     },
     "pypi": {
       "command": "uvx",
-      "args": ["pypi-query-mcp-server"]
+      "args": ["pypi-query-mcp-server"],
     },
     "context7": {
       "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp"]
+      "args": ["-y", "@upstash/context7-mcp"],
     },
     "langfuse-docs": {
       "command": "npx",
-      "args": ["mcp-remote", "https://langfuse.com/api/mcp"]
+      "args": ["mcp-remote", "https://langfuse.com/api/mcp"],
     },
-    "fastmcp-template": {
+    "fastmcp-template-dev": {
+      "command": "uv",
+      "args": ["run", "fastmcp-template", "stdio"],
+      "cwd": "{worktree_root}",
+      "env": {
+        "PYTHONUNBUFFERED": "1",
+      },
+    },
+    "fastmcp-template-server-local": {
+      "command": "npx",
+      "args": ["mcp-remote", "http://localhost:8000/mcp"],
+    },
+    "fastmcp-lib": {
       "command": "uvx",
       "args": ["fastmcp-template", "stdio"],
       "env": {
         "LANGFUSE_PUBLIC_KEY": "",
         "LANGFUSE_SECRET_KEY": "",
-        "LANGFUSE_HOST": "https://cloud.langfuse.com"
-      }
-    }
-  }
+        "LANGFUSE_HOST": "https://cloud.langfuse.com",
+      },
+    },
+  },
 }
