@@ -67,6 +67,8 @@ def main() -> None:
     """Run post-generation setup tasks."""
     project_slug = "{{ cookiecutter.project_slug }}"
     project_name = "{{ cookiecutter.project_name }}"
+    extra_deps = "{{ cookiecutter.extra_dependencies }}".strip()
+    extra_dev_deps = "{{ cookiecutter.extra_dev_dependencies }}".strip()
 
     print("\n" + "=" * 70)
     print(f"Setting up '{project_name}'...")
@@ -79,6 +81,32 @@ def main() -> None:
     if check_command_exists("uv"):
         if not run_command(["uv", "sync"], "Installing dependencies"):
             warnings.append("Dependency installation failed. Run 'uv sync' manually.")
+        else:
+            # Install extra dependencies if specified
+            if extra_deps:
+                deps_list = [d.strip() for d in extra_deps.split(",") if d.strip()]
+                if deps_list:
+                    if not run_command(
+                        ["uv", "add"] + deps_list,
+                        f"Adding extra dependencies: {', '.join(deps_list)}",
+                    ):
+                        warnings.append(
+                            f"Failed to add dependencies: {', '.join(deps_list)}"
+                        )
+
+            # Install extra dev dependencies if specified
+            if extra_dev_deps:
+                dev_deps_list = [
+                    d.strip() for d in extra_dev_deps.split(",") if d.strip()
+                ]
+                if dev_deps_list:
+                    if not run_command(
+                        ["uv", "add", "--dev"] + dev_deps_list,
+                        f"Adding extra dev dependencies: {', '.join(dev_deps_list)}",
+                    ):
+                        warnings.append(
+                            f"Failed to add dev dependencies: {', '.join(dev_deps_list)}"
+                        )
     else:
         print("→ Installing dependencies...")
         print("  ✗ uv not found - skipping dependency installation")

@@ -12,6 +12,8 @@
   "include_demo_tools": ["no", "yes"],
   "include_langfuse": ["yes", "no"],
   "github_username": "l4b4r4b4b4",
+  "extra_dependencies": "",
+  "extra_dev_dependencies": "",
   "__project_slug_underscore": "{{ cookiecutter.project_slug.replace('-', '_') }}",
   "__docker_image": "{{ cookiecutter.github_username }}/{{ cookiecutter.project_slug }}",
   "__year": "2025"
