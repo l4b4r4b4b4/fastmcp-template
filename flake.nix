@@ -1,5 +1,5 @@
 {
-  description = "fastmcp-template - FastMCP server with mcp-refcache and Langfuse tracing";
+  description = "fastmcp-template - Cookiecutter template for FastMCP servers";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -27,17 +27,16 @@
               python312
               uv
 
-              # System libraries (required for some dependencies)
+              # Template generation
+              cookiecutter
+
+              # System libraries
               zlib
               stdenv.cc.cc.lib
 
               # Shells
               zsh
               bash
-
-              # Linting & Formatting
-              ruff
-              pre-commit
 
               # Development tools
               git
@@ -46,81 +45,54 @@
               wget
               jq
               tree
-              httpie
             ];
 
           profile = ''
-            echo "🚀 fastmcp-template Development Environment"
+            echo "🍪 fastmcp-template Development Environment"
             echo "==========================================="
-
-            # Create and activate uv virtual environment if it doesn't exist
-            if [ ! -d ".venv" ]; then
-              echo "📦 Creating uv virtual environment..."
-              uv venv --python python3.12 --prompt "fastmcp-template"
-            fi
-
-            # Activate the virtual environment
-            source .venv/bin/activate
-
-            # Set a recognizable name for IDEs
-            export VIRTUAL_ENV_PROMPT="fastmcp-template"
-
-            # Sync dependencies
-            if [ -f "pyproject.toml" ]; then
-              echo "🔄 Syncing dependencies..."
-              uv sync --quiet
-            else
-              echo "⚠️  No pyproject.toml found. Run 'uv init' to create project."
-            fi
-
             echo ""
-            echo "✅ Python: $(python --version)"
-            echo "✅ uv:     $(uv --version)"
-            echo "✅ Virtual environment: activated (.venv)"
-            echo "✅ PYTHONPATH: $PWD/src:$PWD"
+            echo "This is the template repository development environment."
+            echo "Use 'cookiecutter' to test template generation."
+            echo ""
+            echo "✅ Python:       $(python --version)"
+            echo "✅ uv:           $(uv --version)"
+            echo "✅ cookiecutter: $(cookiecutter --version | head -n1)"
+            echo ""
           '';
 
           runScript = ''
             # Set shell for the environment
-            SHELL=${pkgs.zsh}/bin/zsh
+            SHELL=''${pkgs.zsh}/bin/zsh
 
-            # Set PYTHONPATH to project root for module imports
-            export PYTHONPATH="$PWD/src:$PWD"
-            export SSL_CERT_FILE="/etc/ssl/certs/ca-bundle.crt"
-
+            echo "🍪 Template Development Quick Reference:"
             echo ""
-            echo "🚀 fastmcp-template Quick Reference:"
+            echo "🧪 Test Template Generation:"
+            echo "  cookiecutter . --no-input                      - Generate with defaults"
+            echo "  cookiecutter . --output-dir /tmp/test-gen      - Generate to specific dir"
+            echo "  cookiecutter .                                 - Interactive mode"
             echo ""
-            echo "🔧 Development:"
-            echo "  uv sync                    - Sync dependencies"
-            echo "  uv run pytest              - Run tests"
-            echo "  uv run ruff check .        - Lint code"
-            echo "  uv run ruff format .       - Format code"
-            echo "  uv lock --upgrade          - Update all dependencies"
+            echo "🔍 Verify Generated Project:"
+            echo "  cd <generated-project>"
+            echo "  uv sync                                        - Install dependencies"
+            echo "  uv run pytest                                  - Run tests"
+            echo "  uv run ruff check .                            - Lint code"
             echo ""
-            echo "📦 Package Management:"
-            echo "  uv add <package>           - Add runtime dependency"
-            echo "  uv add --dev <package>     - Add dev dependency"
-            echo "  uv remove <package>        - Remove dependency"
+            echo "📝 Template Files:"
+            echo "  cookiecutter.json                              - Template variables"
+            echo "  hooks/post_gen_project.py                      - Post-generation automation"
+            echo "  {{cookiecutter.project_slug}}/                 - Template directory"
             echo ""
-            echo "🚀 Run Server:"
-            echo "  uv run fastmcp-template        - Run MCP server (stdio)"
-            echo "  uv run fastmcp-template --transport sse --port 8000"
-            echo ""
-            echo "🔗 mcp-refcache dependency:"
-            echo "  Installed from: git+https://github.com/l4b4r4b4b4/mcp-refcache"
-            echo ""
-            echo "🚀 Ready to build!"
+            echo "🚀 Ready to develop templates!"
             echo ""
 
             # Start zsh shell
-            exec ${pkgs.zsh}/bin/zsh
+            exec ''${pkgs.zsh}/bin/zsh
           '';
         };
       in {
         devShells.default = pkgs.mkShell {
           shellHook = ''
-            exec ${fhsEnv}/bin/fastmcp-template-dev-env
+            exec ''${fhsEnv}/bin/fastmcp-template-dev-env
           '';
         };
 

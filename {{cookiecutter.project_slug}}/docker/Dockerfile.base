@@ -10,11 +10,11 @@
 #     -t fastmcp-base:latest .
 #
 # Publish to GHCR:
-#   docker tag fastmcp-base:latest ghcr.io/l4b4r4b4b4/fastmcp-base:latest
-#   docker push ghcr.io/l4b4r4b4b4/fastmcp-base:latest
+#   docker tag fastmcp-base:latest ghcr.io/{{ cookiecutter.github_username }}/{{ cookiecutter.project_slug }}-base:latest
+#   docker push ghcr.io/{{ cookiecutter.github_username }}/{{ cookiecutter.project_slug }}-base:latest
 #
 # Usage in other projects:
-#   FROM ghcr.io/l4b4r4b4b4/fastmcp-base:latest
+#   FROM ghcr.io/{{ cookiecutter.github_username }}/{{ cookiecutter.project_slug }}-base:latest
 #   COPY app/ /app/app/
 #   CMD ["python", "-m", "app", "streamable-http"]
 # ==============================================================================
@@ -93,8 +93,9 @@ ENV PYTHONDONTWRITEBYTECODE=1
 EXPOSE 8000
 
 # Labels for container metadata
-LABEL org.opencontainers.image.source="https://github.com/l4b4r4b4b4/fastmcp-template"
-LABEL org.opencontainers.image.description="FastMCP Base Image with mcp-refcache"
+LABEL org.opencontainers.image.source="https://github.com/{{ cookiecutter.github_username }}/{{ cookiecutter.project_slug }}"
+LABEL org.opencontainers.image.description="{{ cookiecutter.project_description }}"
+LABEL org.opencontainers.image.authors="{{ cookiecutter.author_name }} <{{ cookiecutter.author_email }}>"
 LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.base.name="python:${PYTHON_VERSION}-slim"
 

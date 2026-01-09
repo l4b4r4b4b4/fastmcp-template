@@ -1,4 +1,4 @@
-# Docker Compose for FastMCP Template
+# Docker Compose for {{ cookiecutter.project_name }}
 #
 # Usage:
 #   docker compose up                    # Run production server
@@ -11,14 +11,14 @@
 
 services:
   # Production server
-  fastmcp-template:
+  {{cookiecutter.project_slug}}:
     build:
       context: .
       dockerfile: docker/Dockerfile
       target: production
       args:
         - PYTHON_VERSION=${PYTHON_VERSION:-3.12}
-    image: ghcr.io/l4b4r4b4b4/fastmcp-template:latest
+    image: ghcr.io/{{ cookiecutter.github_username }}/{{ cookiecutter.project_slug }}:latest
     ports:
       - "8000:8000"
     environment:
@@ -52,6 +52,6 @@ services:
       dockerfile: docker/Dockerfile.base
       args:
         - PYTHON_VERSION=${PYTHON_VERSION:-3.12}
-    image: ghcr.io/l4b4r4b4b4/fastmcp-base:latest
+    image: ghcr.io/{{ cookiecutter.github_username }}/{{ cookiecutter.project_slug }}-base:latest
     profiles:
       - build

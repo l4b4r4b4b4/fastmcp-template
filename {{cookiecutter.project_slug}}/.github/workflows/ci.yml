@@ -24,7 +24,7 @@ on:
 
 # Cancel in-progress runs for the same branch
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-{%  raw %}${{ github.ref }}{% endraw %}
   cancel-in-progress: true
 
 env:
@@ -34,7 +34,7 @@ env:
 jobs:
   lint:
     name: Lint & Format
-    runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}
+    runs-on: {%  raw %}${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}{% endraw %}
     timeout-minutes: 10
 
     steps:
@@ -44,7 +44,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: {%  raw %}${{ env.PYTHON_VERSION }}{% endraw %}
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5
@@ -54,7 +54,7 @@ jobs:
       # Configure git to use GH_PAT for private repos
       - name: Configure git for private repos
         run: |
-          git config --global url."https://${{ secrets.GH_PAT }}@github.com/".insteadOf "https://github.com/"
+          git config --global url."https://{%  raw %}${{ secrets.GH_PAT }}{% endraw %}@github.com/".insteadOf "https://github.com/"
 
       - name: Install dependencies
         run: uv sync --all-groups
@@ -66,8 +66,8 @@ jobs:
         run: uv run ruff format --check .
 
   test:
-    name: Test (Python ${{ matrix.python-version }})
-    runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}
+    name: Test (Python {%  raw %}${{ matrix.python-version }}{% endraw %})
+    runs-on: {%  raw %}${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}{% endraw %}
     timeout-minutes: 15
     strategy:
       fail-fast: false
@@ -78,10 +78,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python {%  raw %}${{ matrix.python-version }}{% endraw %}
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: {%  raw %}${{ matrix.python-version }}{% endraw %}
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5
@@ -90,7 +90,7 @@ jobs:
 
       - name: Configure git for private repos
         run: |
-          git config --global url."https://${{ secrets.GH_PAT }}@github.com/".insteadOf "https://github.com/"
+          git config --global url."https://{%  raw %}${{ secrets.GH_PAT }}{% endraw %}@github.com/".insteadOf "https://github.com/"
 
       - name: Install dependencies
         run: uv sync --all-groups
@@ -103,13 +103,13 @@ jobs:
         if: matrix.python-version == '3.12'
         uses: codecov/codecov-action@v4
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+          token: {%  raw %}${{ secrets.CODECOV_TOKEN }}{% endraw %}
           files: ./coverage.xml
           fail_ci_if_error: false
 
   security:
     name: Security Scan
-    runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}
+    runs-on: {%  raw %}${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}{% endraw %}
     timeout-minutes: 10
 
     steps:
@@ -119,7 +119,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: {%  raw %}${{ env.PYTHON_VERSION }}{% endraw %}
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5
@@ -128,7 +128,7 @@ jobs:
 
       - name: Configure git for private repos
         run: |
-          git config --global url."https://${{ secrets.GH_PAT }}@github.com/".insteadOf "https://github.com/"
+          git config --global url."https://{%  raw %}${{ secrets.GH_PAT }}{% endraw %}@github.com/".insteadOf "https://github.com/"
 
       - name: Install dependencies
         run: uv sync --all-groups
@@ -147,16 +147,16 @@ jobs:
   # Summary job that other workflows can depend on
   ci-success:
     name: CI Success
-    runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}
+    runs-on: {%  raw %}${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}{% endraw %}
     needs: [lint, test, security]
     if: always()
 
     steps:
       - name: Check all jobs passed
         run: |
-          if [[ "${{ needs.lint.result }}" != "success" ]] || \
-             [[ "${{ needs.test.result }}" != "success" ]] || \
-             [[ "${{ needs.security.result }}" != "success" ]]; then
+          if [[ "{%  raw %}${{ needs.lint.result }}{% endraw %}" != "success" ]] || \
+             [[ "{%  raw %}${{ needs.test.result }}{% endraw %}" != "success" ]] || \
+             [[ "{%  raw %}${{ needs.security.result }}{% endraw %}" != "success" ]]; then
             echo "One or more CI jobs failed"
             exit 1
           fi

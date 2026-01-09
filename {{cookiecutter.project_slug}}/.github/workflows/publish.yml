@@ -34,7 +34,7 @@ on:
 
 # Cancel in-progress runs
 concurrency:
-  group: publish-${{ github.ref }}
+  group: publish-{%  raw %}${{ github.ref }}{% endraw %}
   cancel-in-progress: true
 
 jobs:

@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2024 l4b4r4b4b4
+Copyright (c) {{ cookiecutter.__year }} {{ cookiecutter.author_name }}
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

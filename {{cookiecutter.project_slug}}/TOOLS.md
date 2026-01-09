@@ -1,6 +1,6 @@
-# FastMCP Template - Available Tools
+# {{ cookiecutter.project_name }} - Available Tools
 
-This document describes all MCP tools available in the FastMCP Template server.
+This document describes all MCP tools available in the {{ cookiecutter.project_name }} server.
 
 ## Quick Reference
 

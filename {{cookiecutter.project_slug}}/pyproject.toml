@@ -1,23 +1,25 @@
 [project]
-name = "fastmcp-template"
-version = "0.0.3"
-description = "FastMCP server template with mcp-refcache and Langfuse tracing"
+name = "{{ cookiecutter.project_slug }}"
+version = "0.0.0"
+description = "{{ cookiecutter.project_description }}"
 readme = "README.md"
 authors = [
-    { name = "l4b4r4b4b4", email = "lucas.cansino@mail.de" }
+    { name = "{{ cookiecutter.author_name }}", email = "{{ cookiecutter.author_email }}" }
 ]
-requires-python = ">=3.12"
+requires-python = ">={{ cookiecutter.python_version }}"
 dependencies = [
-    "fastmcp>=2.14.0",
-    "langfuse>=3.10.0",
-    "mcp-refcache>=0.1.0",
-    "pydantic>=2.10.0",
+    "fastmcp{{ cookiecutter.fastmcp_version }}",
+{% if cookiecutter.include_langfuse == "yes" %}
+    "langfuse{{ cookiecutter.langfuse_version }}",
+{% endif %}
+    "mcp-refcache{{ cookiecutter.mcp_refcache_version }}",
+    "pydantic{{ cookiecutter.pydantic_version }}",
     "pydantic-settings>=2.10.0",
     "typer>=0.15.0",
 ]
 
 [project.scripts]
-fastmcp-template = "app.__main__:app"
+{{ cookiecutter.project_slug }} = "app.__main__:app"
 
 [build-system]
 requires = ["hatchling>=1.0.0"]
@@ -40,7 +42,7 @@ dev = [
 ]
 
 [tool.ruff]
-target-version = "py312"
+target-version = "py{{ cookiecutter.python_version | replace('.', '') }}"
 line-length = 88
 src = ["app", "tests"]
 exclude = [".agent", ".external", "archive"]
@@ -89,7 +91,7 @@ exclude_lines = [
 skip_empty = true
 
 [tool.mypy]
-python_version = "3.12"
+python_version = "{{ cookiecutter.python_version }}"
 strict = true
 warn_return_any = true
 warn_unused_ignores = true

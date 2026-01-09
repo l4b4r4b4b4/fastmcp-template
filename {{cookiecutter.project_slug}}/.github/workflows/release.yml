@@ -1,4 +1,4 @@
-# Release Pipeline for FastMCP Template
+# Release Pipeline for {{ cookiecutter.project_name }}
 #
 # Permissions Note:
 # workflow_run triggered workflows need explicit permissions for security-events
@@ -53,28 +53,28 @@ on:
 
 # Cancel in-progress runs
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-{% raw %}${{ github.ref }}{% endraw %}
   cancel-in-progress: true
 
 env:
   REGISTRY: ghcr.io
-  BASE_IMAGE_NAME: ${{ github.repository_owner }}/fastmcp-base
-  APP_IMAGE_NAME: ${{ github.repository_owner }}/fastmcp-template
+  BASE_IMAGE_NAME: {{ cookiecutter.github_username }}/{{ cookiecutter.project_slug }}-base
+  APP_IMAGE_NAME: {{ cookiecutter.github_username }}/{{ cookiecutter.project_slug }}
 
 jobs:
   # Gate: Only proceed if CI passed (or tag push / manual trigger)
   check-ci:
     name: Verify CI Passed
-    runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}
+    runs-on: {% raw %}${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}{% endraw %}
     if: >
       github.event_name == 'workflow_dispatch' ||
       github.event_name == 'push' ||
       github.event.workflow_run.conclusion == 'success'
     outputs:
-      should_build: ${{ steps.check.outputs.should_build }}
-      should_build_base: ${{ steps.check.outputs.should_build_base }}
-      is_release: ${{ steps.check.outputs.is_release }}
-      version: ${{ steps.check.outputs.version }}
+      should_build: {% raw %}${{ steps.check.outputs.should_build }}{% endraw %}
+      should_build_base: {% raw %}${{ steps.check.outputs.should_build_base }}{% endraw %}
+      is_release: {% raw %}${{ steps.check.outputs.is_release }}{% endraw %}
+      version: {% raw %}${{ steps.check.outputs.version }}{% endraw %}
 
     steps:
       - name: Checkout repository
@@ -97,18 +97,18 @@ jobs:
       - name: Check CI status and extract version
         id: check
         run: |
-          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref_type }}" == "tag" ]]; then
-            VERSION="${{ github.ref_name }}"
+          if [[ "{% raw %}${{ github.event_name }}{% endraw %}" == "push" && "{% raw %}${{ github.ref_type }}{% endraw %}" == "tag" ]]; then
+            VERSION="{% raw %}${{ github.ref_name }}{% endraw %}"
             echo "Tag push - version: $VERSION"
             echo "should_build=true" >> $GITHUB_OUTPUT
             echo "is_release=true" >> $GITHUB_OUTPUT
             echo "version=$VERSION" >> $GITHUB_OUTPUT
-          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          elif [[ "{% raw %}${{ github.event_name }}{% endraw %}" == "workflow_dispatch" ]]; then
             echo "Manual trigger - proceeding with build"
             echo "should_build=true" >> $GITHUB_OUTPUT
             echo "is_release=false" >> $GITHUB_OUTPUT
             echo "version=latest" >> $GITHUB_OUTPUT
-          elif [[ "${{ github.event.workflow_run.conclusion }}" == "success" ]]; then
+          elif [[ "{% raw %}${{ github.event.workflow_run.conclusion }}{% endraw %}" == "success" ]]; then
             echo "CI passed - proceeding with build"
             echo "should_build=true" >> $GITHUB_OUTPUT
             echo "is_release=false" >> $GITHUB_OUTPUT
@@ -120,9 +120,9 @@ jobs:
 
           # Determine if base image needs rebuilding
           # Always rebuild base on: version tags, manual trigger, or relevant file changes
-          if [[ "${{ steps.base-changes.outputs.changed }}" == "true" ]] || \
-             [[ "${{ github.event_name }}" == "push" && "${{ github.ref_type }}" == "tag" ]] || \
-             [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          if [[ "{% raw %}${{ steps.base-changes.outputs.changed }}{% endraw %}" == "true" ]] || \
+             [[ "{% raw %}${{ github.event_name }}{% endraw %}" == "push" && "{% raw %}${{ github.ref_type }}{% endraw %}" == "tag" ]] || \
+             [[ "{% raw %}${{ github.event_name }}{% endraw %}" == "workflow_dispatch" ]]; then
             echo "should_build_base=true" >> $GITHUB_OUTPUT
           else
             echo "should_build_base=false" >> $GITHUB_OUTPUT
@@ -130,7 +130,7 @@ jobs:
 
   build-base:
     name: Build Base Image
-    runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}
+    runs-on: {% raw %}${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}{% endraw %}
     needs: check-ci
     if: needs.check-ci.outputs.should_build == 'true' && needs.check-ci.outputs.should_build_base == 'true'
     timeout-minutes: 30
@@ -139,8 +139,8 @@ jobs:
       packages: write
 
     outputs:
-      base-digest: ${{ steps.build.outputs.digest }}
-      base-tags: ${{ steps.meta.outputs.tags }}
+      base-digest: {% raw %}${{ steps.build.outputs.digest }}{% endraw %}
+      base-tags: {% raw %}${{ steps.meta.outputs.tags }}{% endraw %}
 
     steps:
       - name: Checkout repository
@@ -155,24 +155,24 @@ jobs:
       - name: Log in to Container Registry
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: {% raw %}${{ env.REGISTRY }}{% endraw %}
+          username: {% raw %}${{ github.actor }}{% endraw %}
+          password: {% raw %}${{ secrets.GITHUB_TOKEN }}{% endraw %}
 
       - name: Extract metadata for base image
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.BASE_IMAGE_NAME }}
+          images: {% raw %}${{ env.REGISTRY }}/${{ env.BASE_IMAGE_NAME }}{% endraw %}
           tags: |
             # Always include sha
             type=sha,prefix=
             # Latest on main branch
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || needs.check-ci.outputs.is_release == 'false' }}
+            type=raw,value=latest,enable={% raw %}${{ github.ref == 'refs/heads/main' || needs.check-ci.outputs.is_release == 'false' }}{% endraw %}
             # Semantic version tags (v0.0.1 -> v0.0.1, 0.0.1, 0.0)
-            type=semver,pattern=v{{version}},enable=${{ needs.check-ci.outputs.is_release == 'true' }}
-            type=semver,pattern={{version}},enable=${{ needs.check-ci.outputs.is_release == 'true' }}
-            type=semver,pattern={{major}}.{{minor}},enable=${{ needs.check-ci.outputs.is_release == 'true' }}
+            type=semver,pattern=v{{'{{version}}'}},enable={% raw %}${{ needs.check-ci.outputs.is_release == 'true' }}{% endraw %}
+            type=semver,pattern={{'{{version}}'}},enable={% raw %}${{ needs.check-ci.outputs.is_release == 'true' }}{% endraw %}
+            type=semver,pattern={{'{{major}}.{{minor}}'}},enable={% raw %}${{ needs.check-ci.outputs.is_release == 'true' }}{% endraw %}
 
       - name: Build and push base image
         id: build
@@ -181,17 +181,17 @@ jobs:
           context: .
           file: docker/Dockerfile.base
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: {% raw %}${{ steps.meta.outputs.tags }}{% endraw %}
+          labels: {% raw %}${{ steps.meta.outputs.labels }}{% endraw %}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64,linux/arm64
           secrets: |
-            github_token=${{ secrets.GH_PAT }}
+            github_token={% raw %}${{ secrets.GH_PAT }}{% endraw %}
 
   build-app:
     name: Build App Image
-    runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}
+    runs-on: {% raw %}${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}{% endraw %}
     needs: [check-ci, build-base]
     if: |
       always() &&
@@ -203,8 +203,8 @@ jobs:
       packages: write
 
     outputs:
-      app-digest: ${{ steps.build.outputs.digest }}
-      app-tags: ${{ steps.meta.outputs.tags }}
+      app-digest: {% raw %}${{ steps.build.outputs.digest }}{% endraw %}
+      app-tags: {% raw %}${{ steps.meta.outputs.tags }}{% endraw %}
 
     steps:
       - name: Checkout repository
@@ -219,24 +219,24 @@ jobs:
       - name: Log in to Container Registry
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: {% raw %}${{ env.REGISTRY }}{% endraw %}
+          username: {% raw %}${{ github.actor }}{% endraw %}
+          password: {% raw %}${{ secrets.GITHUB_TOKEN }}{% endraw %}
 
       - name: Extract metadata for app image
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.APP_IMAGE_NAME }}
+          images: {% raw %}${{ env.REGISTRY }}/${{ env.APP_IMAGE_NAME }}{% endraw %}
           tags: |
             # Always include sha
             type=sha,prefix=
             # Latest on main branch
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || needs.check-ci.outputs.is_release == 'false' }}
+            type=raw,value=latest,enable={% raw %}${{ github.ref == 'refs/heads/main' || needs.check-ci.outputs.is_release == 'false' }}{% endraw %}
             # Semantic version tags (v0.0.1 -> v0.0.1, 0.0.1, 0.0)
-            type=semver,pattern=v{{version}},enable=${{ needs.check-ci.outputs.is_release == 'true' }}
-            type=semver,pattern={{version}},enable=${{ needs.check-ci.outputs.is_release == 'true' }}
-            type=semver,pattern={{major}}.{{minor}},enable=${{ needs.check-ci.outputs.is_release == 'true' }}
+            type=semver,pattern=v{{'{{version}}'}},enable={% raw %}${{ needs.check-ci.outputs.is_release == 'true' }}{% endraw %}
+            type=semver,pattern={{'{{version}}'}},enable={% raw %}${{ needs.check-ci.outputs.is_release == 'true' }}{% endraw %}
+            type=semver,pattern={{'{{major}}.{{minor}}'}},enable={% raw %}${{ needs.check-ci.outputs.is_release == 'true' }}{% endraw %}
 
       - name: Build and push app image
         id: build
@@ -246,17 +246,17 @@ jobs:
           file: docker/Dockerfile
           target: production
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: {% raw %}${{ steps.meta.outputs.tags }}{% endraw %}
+          labels: {% raw %}${{ steps.meta.outputs.labels }}{% endraw %}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64,linux/arm64
           build-args: |
-            BASE_IMAGE=${{ env.REGISTRY }}/${{ env.BASE_IMAGE_NAME }}:latest
+            BASE_IMAGE={% raw %}${{ env.REGISTRY }}/${{ env.BASE_IMAGE_NAME }}{% endraw %}:latest
 
   security-scan:
     name: Security Scan
-    runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}
+    runs-on: {% raw %}${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}{% endraw %}
     needs: [check-ci, build-base, build-app]
     if: |
       always() &&
@@ -275,14 +275,14 @@ jobs:
       - name: Log in to Container Registry
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: {% raw %}${{ env.REGISTRY }}{% endraw %}
+          username: {% raw %}${{ github.actor }}{% endraw %}
+          password: {% raw %}${{ secrets.GITHUB_TOKEN }}{% endraw %}
 
       - name: Run Trivy on base image
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.BASE_IMAGE_NAME }}:latest
+          image-ref: {% raw %}${{ env.REGISTRY }}/${{ env.BASE_IMAGE_NAME }}{% endraw %}:latest
           format: "sarif"
           output: "trivy-base-results.sarif"
           severity: "CRITICAL,HIGH"
@@ -290,7 +290,7 @@ jobs:
       - name: Run Trivy on app image
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.APP_IMAGE_NAME }}:latest
+          image-ref: {% raw %}${{ env.REGISTRY }}/${{ env.APP_IMAGE_NAME }}{% endraw %}:latest
           format: "sarif"
           output: "trivy-app-results.sarif"
           severity: "CRITICAL,HIGH"
@@ -312,7 +312,7 @@ jobs:
   # Summary
   release-complete:
     name: Release Complete
-    runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}
+    runs-on: {% raw %}${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}{% endraw %}
     needs: [check-ci, build-base, build-app, security-scan]
     if: always() && needs.build-app.result == 'success'
 
@@ -322,17 +322,17 @@ jobs:
           echo "## Release Pipeline Complete :rocket:" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Release Info" >> $GITHUB_STEP_SUMMARY
-          echo "- Version: \`${{ needs.check-ci.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- Is Semantic Release: \`${{ needs.check-ci.outputs.is_release }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- Base Image Rebuilt: \`${{ needs.build-base.result }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Version: \`{% raw %}${{ needs.check-ci.outputs.version }}{% endraw %}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Is Semantic Release: \`{% raw %}${{ needs.check-ci.outputs.is_release }}{% endraw %}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Base Image Rebuilt: \`{% raw %}${{ needs.build-base.result }}{% endraw %}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Images Published" >> $GITHUB_STEP_SUMMARY
-          echo "- Base: \`${{ env.REGISTRY }}/${{ env.BASE_IMAGE_NAME }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- App: \`${{ env.REGISTRY }}/${{ env.APP_IMAGE_NAME }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Base: \`{% raw %}${{ env.REGISTRY }}/${{ env.BASE_IMAGE_NAME }}{% endraw %}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- App: \`{% raw %}${{ env.REGISTRY }}/${{ env.APP_IMAGE_NAME }}{% endraw %}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Tags" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          echo "${{ needs.build-app.outputs.app-tags }}" >> $GITHUB_STEP_SUMMARY
+          echo "{% raw %}${{ needs.build-app.outputs.app-tags }}{% endraw %}" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Security Scan: ${{ needs.security-scan.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "### Security Scan: {% raw %}${{ needs.security-scan.result }}{% endraw %}" >> $GITHUB_STEP_SUMMARY
