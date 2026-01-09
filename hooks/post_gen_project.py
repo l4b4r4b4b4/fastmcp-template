@@ -119,18 +119,14 @@ def main() -> None:
     git_init_success = False
 
     if git_available:
-        # Check if already in a git repository
-        try:
-            subprocess.run(
-                ["git", "rev-parse", "--git-dir"],
-                check=True,
-                capture_output=True,
-                text=True,
-            )
+        # Check if .git exists in current directory (not parent)
+        git_dir = Path.cwd() / ".git"
+        if git_dir.exists():
             print("→ Initializing Git repository...")
-            print("  ⓘ Already in a git repository - skipping git init")
-        except subprocess.CalledProcessError:
-            # Not in a git repo, safe to init
+            print("  ⓘ Git repository already initialized in this directory")
+            git_init_success = True
+        else:
+            # Initialize new git repo (even if inside another repo - nested repos are valid)
             if run_command(["git", "init"], "Initializing Git repository"):
                 git_init_success = True
             else:
