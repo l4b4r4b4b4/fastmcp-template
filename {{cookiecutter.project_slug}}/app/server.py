@@ -1,4 +1,4 @@
-"""FastMCP Template Server with RefCache and Langfuse Tracing.
+"""{{ cookiecutter.project_name }} - FastMCP Server with RefCache{% if cookiecutter.include_langfuse == "yes" %} and Langfuse Tracing{% endif %}.
 
 This module creates and configures the FastMCP server, wiring together
 tools from the modular tools package.
@@ -9,15 +9,17 @@ Features:
 - Pagination for accessing large datasets
 - Access control (user vs agent permissions)
 - Private computation (EXECUTE without READ)
+{% if cookiecutter.include_langfuse == "yes" %}
 - Langfuse tracing integration for observability
+{% endif %}
 
 Usage:
     # Run with typer CLI
-    uvx fastmcp-template stdio           # Local CLI mode
-    uvx fastmcp-template streamable-http # Remote/Docker mode
+    uvx {{ cookiecutter.project_slug }} stdio           # Local CLI mode
+    uvx {{ cookiecutter.project_slug }} streamable-http # Remote/Docker mode
 
     # Or with uv
-    uv run fastmcp-template stdio
+    uv run {{ cookiecutter.project_slug }} stdio
 """
 
 from __future__ import annotations
@@ -34,23 +36,30 @@ from app.tools import (
     create_get_cached_result,
     create_health_check,
     create_store_secret,
+{% if cookiecutter.include_langfuse == "yes" %}
     enable_test_context,
-    generate_items,
     get_trace_info,
-    hello,
     reset_test_context,
     set_test_context,
+{% endif %}
+{% if cookiecutter.include_demo_tools == "yes" %}
+    generate_items,
+    hello,
+{% endif %}
 )
+{% if cookiecutter.include_langfuse == "yes" %}
 from app.tracing import TracedRefCache
+{% endif %}
 
 # =============================================================================
 # Initialize FastMCP Server
 # =============================================================================
 
 mcp = FastMCP(
-    name="FastMCP Template",
-    instructions=f"""A template MCP server with reference-based caching and Langfuse tracing.
+    name="{{ cookiecutter.project_name }}",
+    instructions=f"""{{ cookiecutter.project_description }}
 
+{% if cookiecutter.include_langfuse == "yes" %}
 All tool calls are traced to Langfuse with:
 - User ID and Session ID from context (for filtering/aggregation)
 - Full context metadata (org_id, agent_id, cache_namespace)
@@ -58,28 +67,34 @@ All tool calls are traced to Langfuse with:
 
 Enable test mode with enable_test_context() to simulate different users.
 
+{% endif %}
 Available tools:
+{% if cookiecutter.include_demo_tools == "yes" %}
 - hello: Simple greeting tool (no caching)
 - generate_items: Generate a list of items (cached in public namespace)
+{% endif %}
 - store_secret: Store a secret value for private computation
 - compute_with_secret: Use a secret in computation without revealing it
 - get_cached_result: Retrieve or paginate through cached results
+{% if cookiecutter.include_langfuse == "yes" %}
 - enable_test_context: Enable/disable test context for Langfuse demos
 - set_test_context: Set test context values for user attribution
 - reset_test_context: Reset test context to defaults
 - get_trace_info: Get current Langfuse tracing status
+{% endif %}
 
 {cache_instructions()}
 """,
 )
 
 # =============================================================================
-# Initialize RefCache with Langfuse Tracing
+# Initialize RefCache{% if cookiecutter.include_langfuse == "yes" %} with Langfuse Tracing{% endif %}
+
 # =============================================================================
 
 # Create the base RefCache instance
 _cache = RefCache(
-    name="fastmcp-template",
+    name="{{ cookiecutter.project_slug }}",
     default_ttl=3600,  # 1 hour TTL
     preview_config=PreviewConfig(
         max_size=2048,  # Max 2048 tokens in previews
@@ -87,8 +102,13 @@ _cache = RefCache(
     ),
 )
 
+{% if cookiecutter.include_langfuse == "yes" %}
 # Wrap with TracedRefCache for Langfuse observability
 cache = TracedRefCache(_cache)
+{% else %}
+# Use RefCache directly (no tracing)
+cache = _cache
+{% endif %}
 
 # =============================================================================
 # Create Bound Tool Functions
@@ -105,6 +125,7 @@ health_check = create_health_check(_cache)
 # Register Tools
 # =============================================================================
 
+{% if cookiecutter.include_demo_tools == "yes" %}
 # Demo tools
 mcp.tool(hello)
 
@@ -119,7 +140,9 @@ async def _generate_items(
 
     Demonstrates caching of large results in the PUBLIC namespace.
     For large counts, returns a reference with a preview instead of the full data.
+{% if cookiecutter.include_langfuse == "yes" %}
     All operations are traced to Langfuse with user/session attribution.
+{% endif %}
 
     Use get_cached_result to paginate through large results.
 
@@ -141,12 +164,15 @@ async def _generate_items(
     return items  # type: ignore[return-value]  # decorator transforms to dict
 
 
+{% endif %}
+{% if cookiecutter.include_langfuse == "yes" %}
 # Context management tools
 mcp.tool(enable_test_context)
 mcp.tool(set_test_context)
 mcp.tool(reset_test_context)
 mcp.tool(get_trace_info)
 
+{% endif %}
 # Cache-bound tools (using pre-created module-level functions)
 mcp.tool(store_secret)
 mcp.tool(compute_with_secret)
@@ -186,8 +212,10 @@ def _template_guide() -> str:
     """Guide for using this MCP server template."""
     return template_guide()
 
+{% if cookiecutter.include_langfuse == "yes" %}
 
 @mcp.prompt
 def _langfuse_guide() -> str:
     """Guide for using Langfuse tracing with this server."""
     return langfuse_guide()
+{% endif %}

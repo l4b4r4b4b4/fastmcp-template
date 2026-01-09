@@ -1,679 +1,478 @@
-# .rules for Coding Assistants in This Project
+# .rules for MCP Server Development
 
-This `.rules` file defines **hard** (must-follow) and **soft** (strongly recommended) rules for working on this Python application. The intent is to maximize code quality, safety, maintainability, and effective use of coding assistants in the context of developing `fastmcp-template` - an MCP server template powered by mcp-refcache.
+This file defines **hard** (must-follow) and **soft** (recommended) rules for MCP server development with mcp-refcache. These guidelines maximize code quality, safety, and effective AI assistant collaboration.
 
 ---
 
 ## General Rules
 
 ### Hard Rules
-- **Do not expose or leak sensitive data** (e.g., credentials, cached values) in logs, error messages, or code comments.
-- **All changes must be reviewed** before merging into a main branch.
-- **Never insert or recommend code that downloads or executes arbitrary, untrusted sources**.
-- **Always cite/attribute code or solutions copied or adapted from external sources.**
-- **Document all public APIs with clear docstrings and examples.**
-- **Follow the principle of least privilege for data, access, and dependencies.**
+- **No sensitive data exposure** in logs, errors, or code
+- **All changes require review** before merging to main
+- **Never execute untrusted code** or arbitrary downloads
+- **Cite external sources** when adapting code
+- **Document all public APIs** with docstrings and examples
+- **Principle of least privilege** for data, access, and dependencies
+- **No system-altering commands by agents** (nixos-rebuild, nix build, etc.)
+  - Agents may provide commands in code blocks for instruction
+  - User must explicitly approve system state changes
+- **Secrets never committed** to repository
+
+### Soft Rules
+- Prefer declarative, reproducible configurations
+- Document major changes in README/CHANGELOG
+- Use meaningful commit messages (Conventional Commits)
+- Periodically clean `archive/` directories
+- Add comments to non-trivial code
 
 ---
 
-## File Editing Preferences
+## File Editing
 
 ### Hard Rules
-- **Prefer edit over overwrite**: When modifying existing files, use edit mode to make targeted changes rather than overwriting the entire file. Only use overwrite mode when a complete rewrite is explicitly requested or necessary.
-- **Preserve existing content**: When updating documentation (README, scratchpad, etc.), add or modify sections rather than replacing the entire file.
+- **Prefer edit over overwrite** - Targeted changes unless complete rewrite needed
+- **Preserve existing content** - Add/modify sections, don't replace entire files
 
 ### Rationale
-Overwriting files loses context, makes diffs harder to review, and risks accidentally removing important content. Targeted edits are safer, more reviewable, and preserve the evolution of the document.
+Overwriting loses context, makes diffs harder to review, and risks removing important content.
 
 ---
 
-## AI Assistant Communication Standards
+## AI Assistant Communication
 
 ### Hard Rules
-- **Never lie, cheat, or mislead**: Do not present uncertain information as fact. Do not hide limitations or risks.
-- **Never appease or agree too quickly**: Challenge ideas, point out flaws, and provide honest technical assessment even if uncomfortable.
-- **Be brutally honest about tradeoffs**: Every design decision has costs. State them clearly.
-- **Admit uncertainty explicitly**: Use phrases like "I'm not certain", "This might", "I don't have enough context" when appropriate.
-- **Never present speculation as fact**: Clearly distinguish between what you know, what you infer, and what you're guessing.
-- **Do not hide potential issues to seem agreeable**: If you see risks, edge cases, or problems, state them immediately.
+- **Never lie or mislead** - Admit uncertainty explicitly
+- **Never appease too quickly** - Challenge ideas, point out flaws
+- **Be brutally honest about tradeoffs** - State costs clearly
+- **Never hide potential issues** - Report risks immediately
+- **Distinguish fact from speculation** clearly
 
 ### Soft Rules
-- **Be conservative rather than enthusiastic**: Measured technical analysis over cheerleading. Avoid excessive emoji or hype.
-- **Be self-conscious rather than over-confident**: Question your own suggestions. Consider what you might be missing.
-- **Prefer "This approach has risks X, Y, Z" over "This is BRILLIANT!"**: Professional assessment over excitement.
-- **Ask clarifying questions before proposing solutions**: Don't assume you understand the full context.
-- **State assumptions explicitly**: "Assuming X, then Y" rather than jumping to Y.
-- **Warn about complexity**: If something is harder than it appears, say so upfront.
-- **Acknowledge when simpler alternatives exist**: Don't over-engineer to seem impressive.
+- Be conservative rather than enthusiastic
+- Question your own suggestions
+- Ask clarifying questions before proposing solutions
+- State assumptions explicitly
+- Warn about complexity upfront
+- Acknowledge simpler alternatives
 
 ### Rationale
-Over-confidence, enthusiasm, and appeasing behavior in AI assistants leads to:
-- Acceptance of flawed ideas without proper analysis
-- Missing critical edge cases and failure modes
-- Unfeasible plans that look good on paper
-- Subtle bugs from unstated assumptions
-- Technical debt from premature optimization
-- Loss of trust when issues emerge later
-
-Professional engineering requires honest, conservative assessment. Users need reliable technical partners, not cheerleaders.
+Over-confidence leads to flawed ideas, missed edge cases, unfeasible plans, and loss of trust. Professional engineering requires honest, conservative assessment.
 
 ---
 
-## Naming Conventions (Language-Agnostic)
+## Naming Conventions
 
 ### Hard Rules
-- **Never use single-letter variable names**: Single letters (e.g., `i`, `x`, `n`) provide no context. Always use descriptive names.
-- **Never abbreviate variable, function, or class names**: Write full words. `user_repository` not `usr_repo`, `calculate_total_price` not `calc_tot_price`. Abbreviations rely on context you may not have.
-- **Never encode types in variable names**: Don't use Hungarian notation (e.g., `strName`, `intCount`). The type system should convey type information.
-- **Never prefix interfaces with "I"**: Name interfaces by what they represent, not their implementation detail (e.g., `DocumentIngestor` not `IDocumentIngestor`).
-- **Never name classes with "Base" or "Abstract"**: If you can't name a parent class well, rename the child class to be more specific instead (e.g., `Truck` + `TrailerTruck`, not `BaseTruck` + `Truck`).
-- **Never create "Utils" or "Helper" classes**: These are code smells. Functions should belong to appropriate domain classes or be organized into well-named modules.
-- **Include units in variable names only when types cannot encode them**: Prefer type-safe units (e.g., `Duration`, `TimeSpan`) over `delay_seconds`. For dynamically typed languages, use `delay_seconds` when necessary.
+- **Never use single-letter variable names** - Always descriptive
+- **Never abbreviate names** - `user_repository` not `usr_repo`
+- **No type encoding** - No Hungarian notation
+- **No "I" prefix on interfaces**
+- **No "Base" or "Abstract" class names**
+- **No "Utils" or "Helper" classes** - Organize into proper modules
+- **Include units in names** only when types can't encode them
 
 ### Soft Rules
-- Prefer longer, descriptive names over short, cryptic ones. Modern IDEs have autocomplete; screen width is no longer a constraint.
-- If struggling to name something, consider whether the code structure itself is the problem.
-- Standard libraries don't have "Utils" modules because everything is properly organized. Follow their example.
-
-### Soft Rules
-- Prefer clarity and readability over "clever" code unless performance requires otherwise.
-- Maintain a consistent coding style throughout the project.
-- Encourage incremental, testable changes.
-- Use automated tools (linters, formatters, type checkers) where available.
+- Prefer longer, descriptive names
+- If struggling to name, consider if structure is the problem
 
 ---
 
-## Python Language-Specific Rules
+## Python Rules
 
 ### Hard Rules
-- Conform to [PEP8](https://peps.python.org/pep-0008/) for formatting.
-- Type annotations are required for all public functions, methods, and classes.
-- Use Pydantic models for data structures exposed in the public API.
-- Handle all exceptions explicitly; never use bare `except:` blocks.
-- **Maintain >= 73% code coverage**: If coverage drops, write tests to meet the standard. 73 is the best number (ask Sheldon Cooper).
+- **PEP8 formatting** mandatory
+- **Type annotations required** for all public functions/methods/classes
+- **Pydantic models** for public API data structures
+- **Explicit exception handling** - no bare `except:`
+- **≥73% code coverage** maintained
+- **`__all__` alphabetically sorted** (Ruff RUF022)
 
 ### Soft Rules
-- Add descriptive type hints for all non-trivial internal variables.
-- Use Python 3.10+ features (union types with `|`, match statements) where appropriate.
-- Keep imports minimal and explicit; avoid wildcard imports (`from ... import *`).
-- Ensure all dependencies in `pyproject.toml` are in use and are necessary.
-- Prefer `Protocol` over ABC for defining interfaces (duck typing over inheritance).
-- **`__all__` must be sorted alphabetically**: Ruff enforces RUF022. Do not use comments inside `__all__` lists as they interfere with sorting. Keep exports in a single alphabetically sorted list.
+- Type hints for non-trivial internal variables
+- Use Python 3.12+ features where appropriate
+- Minimal, explicit imports (no wildcards)
+- Prefer `Protocol` over ABC for interfaces
 
 ---
 
-## Python Dependency Management
+## Dependency Management (UV)
 
 ### Hard Rules
-- **This is a UV project**: Use `uv` for all dependency management, NOT pip or pip-compile
-- **Library dependencies in pyproject.toml [project.dependencies]**: Runtime dependencies only
-- **Development dependencies in pyproject.toml [dependency-groups.dev]**: Testing, linting, type checking tools
-- **Use `uv add` to add dependencies**: `uv add package-name` for runtime, `uv add --dev package-name` for dev tools
-- **Use `uv remove` to remove dependencies**: `uv remove package-name`
-- **Never manually edit pyproject.toml dependencies**: Use uv commands to maintain correct formatting and locking
-- **Commit pyproject.toml and uv.lock together**: Both files must be committed when dependencies change
+- **Use `uv` exclusively** - not pip or pip-compile
+- **Runtime deps** in `[project.dependencies]`
+- **Dev deps** in `[dependency-groups.dev]`
+- **Use `uv add/remove`** - never manually edit pyproject.toml
+- **Commit pyproject.toml + uv.lock together**
 
 ### Soft Rules
-- Use `uv sync` to ensure environment matches lockfile after pulling changes
-- Run `uv lock --upgrade` to update all dependencies to latest compatible versions
-- Run `uv lock --upgrade-package <name>` to update a specific package
-- Use version constraints appropriately (>=, ~=, ==) based on stability needs
-- Pin critical dependencies for production stability
-- Keep Docker images lean by excluding dev dependencies in production
+- `uv sync` after pulling changes
+- `uv lock --upgrade` for updates
+- Pin critical production dependencies
 
 ### Rationale
-- **UV is faster**: 10-100x faster than pip for dependency resolution and installation
-- **Reproducible**: uv.lock ensures exact versions across all environments
-- **Modern Python packaging**: Following PEP 621 (pyproject.toml standard)
-- **Single source of truth**: No requirements.txt/requirements.in split
-- **Integrated tooling**: UV handles venv creation, dependency resolution, and installation in one tool
-
-### Examples
-
-**Adding Library Dependency:**
-```bash
-# Add runtime dependency
-uv add pydantic
-
-# Add with version constraint
-uv add "pydantic>=2.0.0"
-
-# Add optional dependency (for extras)
-uv add --optional redis "redis>=4.0.0"
-```
-
-**Adding Development Dependency:**
-```bash
-# Add dev tool
-uv add --dev pytest
-
-# Add with version constraint
-uv add --dev "ruff>=0.14.0"
-```
-
-**Updating Dependencies:**
-```bash
-# Update all dependencies
-uv lock --upgrade
-
-# Update specific package
-uv lock --upgrade-package pydantic
-
-# Sync environment after pull
-uv sync
-```
-
-**Testing Changes:**
-```bash
-# After adding dependencies, sync and test
-uv sync
-uv run pytest
-```
+UV is 10-100x faster, reproducible, follows PEP 621, single source of truth.
 
 ---
 
-## Python Application Design Guidelines
+## MCP Server Design
 
 ### Hard Rules
-- **Single Entry Point**: Application must have a clear entry point (e.g., `server.py:main`)
-- **Configuration via Environment**: Use environment variables for configuration, never hardcode secrets
-- **Graceful Shutdown**: Handle SIGTERM/SIGINT for clean shutdown in containerized environments
-- **Health Checks**: Provide health/readiness endpoints for container orchestration
-- **Structured Logging**: Use structured logging (JSON) for production observability
-
-### Soft Rules
-- **12-Factor App Principles**: Follow 12-factor methodology where applicable
-- **Fail Fast**: Validate configuration at startup, not at runtime
-- **Sensible Defaults**: Application should work with minimal configuration
-- **Feature Flags**: Use environment variables to enable/disable features
-- **Connection Pooling**: Reuse database/cache connections efficiently
-
-### MCP Server Design Principles
-- **Tool Isolation**: Each tool should be independent and stateless where possible
-- **Clear Tool Descriptions**: LLMs rely on descriptions to understand tool usage
-- **Error Handling**: Return structured errors that agents can understand and act on
-- **Reference-Based Results**: Use RefCache for large results to avoid context bloat
+- **Single entry point** (e.g., `server.py:main`)
+- **Environment variable configuration** - no hardcoded secrets
+- **Graceful shutdown** (SIGTERM/SIGINT handling)
+- **Tool isolation** - independent, stateless where possible
+- **Clear tool descriptions** for LLM understanding
+- **Structured error returns** agents can understand
+- **Reference-based results** for large data (RefCache)
 
 ### MCP Tool Return Types
+- **`@cache.cached` tools MUST return `dict[str, Any]`**
+  - Decorator wraps raw return in cache response
+  - Annotation must match wrapped response, not raw data
+  - Prevents MCP schema mismatch errors
 
-#### Hard Rules
-- **`@cache.cached` decorated tools MUST return `dict[str, Any]`**: The decorator wraps the raw return value in a structured cache response containing `ref_id`, `preview`, and metadata. The type annotation must match what the decorator actually returns, not the inner function's raw data.
-
-#### Rationale
-MCP generates tool schemas from Python type annotations. If a cached tool is annotated as returning `list[...]` but the decorator returns `dict[str, Any]`, clients receive a schema mismatch error. The annotation must describe the wrapped response.
-
-#### Example
-```python
-# ✅ Correct - annotation matches decorator's wrapped response
-@mcp.tool
-@cache.cached(namespace="public")
-async def generate_items(count: int = 10) -> dict[str, Any]:
-    """Generate items with caching."""
-    items = [{"id": i} for i in range(count)]
-    return items  # Raw data, decorator wraps it
-
-# ❌ Wrong - annotation describes raw data, not wrapped response
-@mcp.tool
-@cache.cached(namespace="public")
-async def generate_items(count: int = 10) -> list[dict[str, Any]]:
-    """This causes MCP schema mismatch errors."""
-    return [{"id": i} for i in range(count)]
-```
+### Soft Rules
+- 12-factor app principles
+- Fail fast (validate config at startup)
+- Sensible defaults
+- Feature flags via environment
+- Connection pooling
 
 ---
 
-## Documentation Requirements
+## Documentation
 
 ### Hard Rules
-- **All public APIs must have docstrings**: Classes, methods, functions, and module-level constants
-- **Docstrings must include**: One-line summary, parameters, return values, exceptions raised
-- **Examples in docstrings**: At least one usage example for non-trivial APIs
-- **README must be accurate**: If the README shows code, that code must work
+- **All public APIs have docstrings** (classes, methods, functions, constants)
+- **Include**: summary, parameters, returns, exceptions
+- **Examples** in docstrings for non-trivial APIs
+- **README accuracy** - shown code must work
 
 ### Soft Rules
-- Use Google-style docstrings for consistency
-- Include type information in docstrings even when using type hints (for readability)
+- Google-style docstrings
 - Document edge cases and gotchas
-- Provide a "Getting Started" section in README
-- Include architecture documentation for contributors
-
-### Example Docstring
-```python
-def set(
-    self,
-    key: str,
-    value: Any,
-    namespace: str = "public",
-    policy: AccessPolicy | None = None,
-) -> CacheReference:
-    """Store a value in the cache and return a reference.
-
-    Args:
-        key: Unique identifier for this value within the namespace.
-        value: The value to cache. Must be JSON-serializable.
-        namespace: Isolation namespace (default: "public").
-        policy: Access control policy. Defaults to public read/execute.
-
-    Returns:
-        A CacheReference that can be used to retrieve or pass the value.
-
-    Raises:
-        ValueError: If key is empty or contains invalid characters.
-        PermissionError: If actor lacks WRITE permission.
-
-    Example:
-        ```python
-        cache = RefCache()
-        ref = cache.set("user_data", {"name": "Alice"})
-        print(ref.ref_id)  # "default:abc123"
-        ```
-    """
-```
+- Include "Getting Started" in README
+- Architecture documentation for contributors
 
 ---
 
-## Testing Guidelines
+## Testing
 
 ### Hard Rules
-- **Test public API behavior, not implementation details**: Tests should not break when internals change
-- **Each test should test one thing**: Clear, focused test cases
-- **Tests must be deterministic**: No flaky tests. Mock time, randomness, and I/O.
-- **Test error paths**: Ensure exceptions are raised with correct types and messages
+- **Test behavior, not implementation**
+- **One thing per test** - focused test cases
+- **Deterministic tests** - mock time, randomness, I/O
+- **Test error paths** - exceptions with correct types/messages
 
 ### Soft Rules
-- Use pytest fixtures for common setup
-- Prefer `pytest.raises` context manager for exception testing
-- Group tests by feature/class in test files
-- Use descriptive test names: `test_set_raises_permission_error_when_actor_lacks_write`
-- Include integration tests for component interaction
-- Test edge cases: empty inputs, None values, boundary conditions
-
-### Test Organization
-```
-tests/
-├── conftest.py           # Shared fixtures
-├── test_models.py        # Pydantic model tests
-├── test_permissions.py   # Permission and policy tests
-├── test_backends.py      # Backend protocol compliance
-├── test_refcache.py      # RefCache integration tests
-└── test_preview.py       # Preview strategy tests
-```
+- Use pytest fixtures
+- Descriptive test names
+- Integration tests for component interaction
+- Test edge cases (empty, None, boundaries)
 
 ---
 
-## Dependency Injection Patterns
+## Dependency Injection & Design Patterns
 
 ### Hard Rules
-- **Constructor Injection Only**: Always inject dependencies via constructors, never via property/setter injection or service locators.
-- **No Circular Dependencies**: If two classes need each other, the design is wrong. Refactor to extract a third class or use events.
-- **Protocol-Based Contracts**: All injected dependencies must be protocols (duck-typed interfaces), not concrete classes.
+- **Constructor injection only** - Never property/setter injection or service locators
+- **No circular dependencies** - Extract third class or use events
+- **Protocol-based contracts** - All dependencies are protocols, not concrete classes
 
 ### Soft Rules
-- **Factory Pattern for Complex Construction**: Use factory functions/classes when dependency construction requires multiple steps or configuration.
-- **Explicit Over Implicit**: Prefer passing dependencies explicitly rather than using global state.
-- **Test-Friendly Design**: If a class is hard to test (needs many mocks), it probably has too many responsibilities. Refactor.
-- **Document Injection Points**: Use type hints and docstrings to clearly show what gets injected and why.
+- **Factory pattern** for complex construction
+- **Explicit over implicit** - Pass dependencies explicitly, avoid global state
+- **Test-friendly design** - If hard to test (many mocks), refactor
+- **Adapter pattern** for external integrations - Wrap third-party APIs behind protocols
+- **Document injection points** - Type hints and docstrings show what/why
 
 ---
 
-## Git Workflow & Branching
+## AI Assistant Workflow
 
-### Hard Rules
-- **Always use feature branches**: Never commit directly to `main`. All changes must go through pull requests.
-- **Rebase-based workflow**: Use `git rebase` to keep a linear history. Never use merge commits on feature branches.
-- **Branch from latest main**: Always create feature branches from an up-to-date `main` branch.
-- **Conventional Commits**: All commit messages must follow the Conventional Commits format: `type(scope): subject`.
-
-### Soft Rules
-- **Small, focused branches**: Each branch should address one feature, bug, or improvement.
-- **Rebase before PR**: Before creating a pull request, rebase your feature branch on the latest `main` to ensure it's up-to-date.
-- **Squash when appropriate**: For PRs with many small commits, consider squashing before merge (but this is handled by GitHub's squash merge).
-
-### Standard Workflow
-```bash
-# 1. Update main
-git checkout main
-git pull origin main
-
-# 2. Create feature branch
-git checkout -b feature/descriptive-name
-
-# 3. Make changes and commit
-git add .
-git commit -m "feat(scope): description"
-
-# 4. Before pushing, rebase on main
-git fetch origin
-git rebase origin/main
-
-# 5. Push to remote
-git push origin feature/descriptive-name
-
-# 6. Create PR on GitHub
-```
-
----
-
-## AI Assistant Development Workflow
-
-This section defines the **mandatory workflow** for AI coding assistants working on this project.
+**THIS WORKFLOW APPLIES TO BOTH GOALS AND TASKS** - Follow all 5 steps for each level of work.
 
 ### Hard Rules: Development Process
 
-**Step 1: Plan and Gather Information**
-- **MUST gather all available context** before proposing solutions:
+**Step 1: Gather Context & Research**
+- **Problem Space Research:**
+  - Understand the problem thoroughly before looking at solutions
   - Read relevant files (README, CONTRIBUTING, existing code)
-  - Review the `.agent/scratchpad.md` for session context
-  - Use available tools (web search, MCP tools) to research solutions
-  - Ask clarifying questions to understand requirements fully
-- **MUST discuss the task with the user** before writing code
-- **MUST NOT jump directly to implementation** without user approval
+  - Review appropriate scratchpad (`.agent/scratchpad.md`, goal scratchpad, or task scratchpad)
+  - Ask clarifying questions about requirements and constraints
+  - Define success criteria and edge cases
+- **Solution Space Research:**
+  - Research existing solutions and libraries (PyPI packages, GitHub repos)
+  - Compare download statistics, maintenance status, community adoption
+  - Evaluate alternatives (pros/cons, tradeoffs)
+  - Check if problem is already solved (don't reinvent the wheel)
+  - Look for industry standards and best practices
+- **Critical:** Complete problem understanding BEFORE solution design
+- MUST NOT jump to implementation without approval
 
-**Step 2: Document Your Plan**
-- **MUST document planned work** in `.agent/scratchpad.md`:
-  - What you're implementing and why
+**Step 2: Document Plan**
+- Update appropriate scratchpad:
+  - **For Goals:** Update goal scratchpad with objectives, architecture, task breakdown
+  - **For Tasks:** Update task scratchpad with implementation plan, files to modify, test strategy
+  - Document what and why
   - Architectural decisions and tradeoffs
-  - Files that will be modified
-  - Expected outcomes and success criteria
-- Use clear TODO lists with checkboxes
-- Reference relevant sections of `.rules` and `CONTRIBUTING.md`
+  - Files to modify
+  - Success criteria
+- Use TODO lists with checkboxes
 
-**Step 3: Pitch Implementation Approach**
-- **MUST pitch your planned implementation** to the user:
-  - Describe the approach at a high level
-  - List specific files and changes
-  - Explain design decisions and alternatives considered
-  - Identify potential risks or breaking changes
-- **MUST wait for user approval** before proceeding
-- Be prepared to iterate on the approach based on feedback
+**Step 3: Pitch Approach**
+- Describe high-level approach
+- List specific files and changes
+- Explain design decisions and alternatives
+- Identify risks or breaking changes
+- **Wait for user approval before proceeding**
 
-**Step 3.1: Iterate Until Approved**
-- **MUST NOT proceed with implementation** until user explicitly approves
-- If user requests changes to the approach, return to Step 2
-- Document any changes to the plan in scratchpad
+**Step 4: Implement**
+- **For Goals:** Create task directories and scratchpads if multi-task
+- **For Tasks:** Write tests first (or alongside code), follow all paradigms
+- Small, reviewable changes
+- Run tests and linters after each change
 
-**Step 3.2: Use Proper Tools for File Operations**
-- **MUST use `read_file` to read file contents** - never use `head`, `tail`, `cat`, or `less` in terminal
-- **MUST use `edit_file` to modify files** - never use `sed`, `awk`, `perl`, or text editors in terminal
-- **MUST use `grep` tool to search files** - never use terminal `grep` for code searches
-- **MUST use `find_path` to locate files** - never use terminal `find` for file discovery
-- **ONLY use terminal for**:
-  - Running tests, linters, formatters (pytest, ruff, etc.)
-  - Building/compiling projects
-  - Running application commands
-  - Package management (uv, pip, etc.)
-  - Git operations
-  - System checks (checking if commands exist, versions, etc.)
-- **Rationale**: Native IDE tools provide better integration, allow the system to track changes, and enable features like diagnostics and validation
+**Step 5: Document & Review**
+- Update docstrings
+- Update README if API changed
+- Add examples
+- **Update scratchpad with completed work** (what was done, not just what will be done)
+- Run full test suite
 
-**Step 4: Implement with Test-Driven Development**
-- **MUST write tests first** (or alongside code):
-  - Unit tests for individual components
-  - Integration tests for component interaction
-  - Follow existing test patterns in `tests/` directory
-- **MUST follow all paradigms** defined in `.rules` and `CONTRIBUTING.md`:
-  - Protocol-based contracts (no concrete class dependencies)
-  - Constructor injection for dependencies
-  - Pydantic models with Field descriptions
-- **MUST implement iteratively**:
-  - Small, reviewable changes
-  - Commit after each logical unit of work
-  - Run tests and linters after each change (`ruff check .`, `ruff format .`, `pytest`)
+### Workflow Example
 
-**Step 5: Document and Review**
-- **MUST update documentation** as you code:
-  - Docstrings for all public methods
-  - Update README if API changes
-  - Add examples for new features
-- **MUST update scratchpad** with completion status
-- **MUST run full test suite** before considering work complete
+**Scenario:** User requests two goals
 
-### Workflow Summary (Quick Reference)
+**Goal 1 (Simple):**
+1. Gather context, research
+2. Create `goals/01-Goal-Name/scratchpad.md` with plan
+3. Pitch approach, wait for approval
+4. Implement directly (no tasks needed)
+5. Document completion in goal scratchpad
 
-```
-1. Gather Info → Read files, research, ask questions
-   ↓
-2. Document Plan → Update scratchpad with TODO list
-   ↓
-3. Pitch Approach → Describe implementation, get approval
-   ↓ (iterate 2-3 until approved)
-4. TDD Implementation → Write tests, write code, commit
-   ↓
-5. Document & Review → Update docs, run tests, mark complete
-```
+**Goal 2 (Complex):**
+1. Gather context, research
+2. Create `goals/02-Goal-Name/scratchpad.md` with:
+   - Objectives and success criteria
+   - Architecture decisions
+   - **Proposed task breakdown** (list 3-5 tasks)
+3. Pitch approach (including task structure), wait for approval
+4. Create task directories: `Task-01-Name/`, `Task-02-Name/`, etc.
+5. Document task overview in each task scratchpad
+
+**Task 01 of Goal 2:**
+1. Gather context specific to this task
+2. Update `Task-01-Name/scratchpad.md` with:
+   - Implementation plan
+   - Files to create/modify
+   - Test strategy
+   - Expected outcomes
+3. Pitch approach, wait for approval
+4. Implement with TDD
+5. Document **what was completed** in task scratchpad
+
+**Task 02 of Goal 2:**
+1. Repeat Steps 1-5 for Task 02
+2. Never skip Step 3 (approval) even for "small" tasks
+
+### Proper Tool Usage
+- `read_file` for reading (not cat/head/tail)
+- `edit_file` for modifying (not sed/awk)
+- `grep` tool for searching (not terminal grep)
+- `find_path` for file discovery (not terminal find)
+- Terminal ONLY for: tests, linters, builds, package management, git, system checks
 
 ### Hard Rules: Code Quality
-- **MUST run `ruff check . --fix && ruff format .`** before committing
-- **MUST ensure tests pass** with `pytest` before marking work complete
-- **MUST maintain >= 73% code coverage**
-- **MUST NOT skip the approval step** even for "small" changes
+- **Run `ruff check . --fix && ruff format .`** before committing
+- **Tests must pass** with `pytest`
+- **Maintain ≥73% coverage**
+- **No skipping approval** even for "small" changes
 
-### Soft Rules
-- Use the assistant for boilerplate, documentation scaffolding, and generating uncontroversial code
-- Prefer iterative, reviewable code completions over large, sweeping changes
-- When in doubt, ask for design alternatives and tradeoffs before implementing
-- If a task feels too large, break it into smaller sub-tasks and get approval for each
+### Anti-Pattern: What NOT to Do
+❌ Create task, immediately implement, then document after
+✅ Create task, document plan, get approval, implement, document completion
 
 ---
 
 ## Session Handoff
 
-When ending a session or approaching context limits, create a starting prompt for the next session.
-
 ### Hard Rules
-- **MUST provide prompt in a codebox**: Use triple backticks with escaped inner backticks if needed
-- **MUST NOT write the prompt into scratchpad**: Only output in chat as a codebox
-- **MUST keep prompt short and concise**: 15-30 lines maximum
-- **MUST reference scratchpad for details**: Say "See `.agent/scratchpad.md` for full context"
-- **MUST update scratchpad first**: Document progress, decisions, and next steps before creating prompt
+- **Provide prompt in codebox** (triple backticks)
+- **Escape any triple backticks inside the codebox** - Use \`\`\` to prevent breaking the outer codebox
+- **NOT in scratchpad** - only in chat
+- **Keep short** (15-30 lines)
+- **Reference scratchpad** for details
+- **Update scratchpad first**
 
 ### Prompt Structure
 ```
 [Task Title]
 
-## Context
-- Brief project state (1-2 lines)
-- Reference to scratchpad
-
-## What Was Done
-- Bullet list of completed items (3-5 items max)
-
-## Current Task
-- Clear, actionable next steps
-- Specific files to modify
-
-## Guidelines
-- Key constraints or reminders
+Context: Brief state + reference to scratchpad
+What Was Done: 3-5 bullet points
+Current Task: Clear next steps + specific files
+Guidelines: Session-specific constraints (if any - do NOT repeat .rules)
 ```
 
-### Example
-````
-Continue mcp-refcache: Feature X Implementation
-
-## Context
-- Phase 1-5 complete, 389 tests passing
-- See `.agent/scratchpad.md` for full context
-
-## What Was Done
-- Created `src/module.py` with core logic
-- Added tests in `tests/test_module.py`
-
-## Current Task
-1. Add error handling for edge cases
-2. Update documentation
-
-## Guidelines
-- Follow `.rules` (TDD, document as you go)
-- Run `ruff check . --fix` before committing
-````
-
+**Note:** Guidelines section is ONLY for session-specific overrides or additions
+the user provided in chat. Never repeat what's already in .rules file.
 
 ---
 
-## Usage of Coding Assistants (General Guidelines)
+## Goals & Tasks Structure
 
-### Hard Rules
-- Do not take generated code at face value: always review, test, and adapt outputs from the assistant.
-- Do not allow coding assistants to make high-impact, architectural changes without explicit team agreement.
-- Provide context and project-specific docs when prompting assistants (copy/paste as needed).
+### Directory Structure
+```
+.agent/
+├── scratchpad.md           # High-level index
+└── goals/
+    ├── scratchpad.md       # Goals tracking
+    ├── 00-Template-Goal/   # Template
+    └── 01-10-*/            # Numbered goals
+        ├── scratchpad.md
+        └── Task-01-*/
+            └── scratchpad.md
+```
 
-### Soft Rules
-- Use the assistant for boilerplate, documentation scaffolding, and generating uncontroversial code.
-- Prefer iterative, reviewable code completions over large, sweeping changes from coding assistants.
-- When in doubt, ask assistants for design alternatives, tradeoffs, or smaller, safer edits instead of full implementations.
-- **Use Nix dev shell helper functions**: Leverage `test-local` and `sync-agent-rules` for common tasks.
-- After updating `.rules`, run `sync-agent-rules` to keep all agent configurations in sync across `.agent`, `.cursor`, `.zed`, etc.
+### Status Tracking
+- 🟢 Complete - Achieved and verified
+- 🟡 In Progress - Actively working
+- 🔴 Blocked - Waiting on dependency
+- ⚪ Not Started - Planned
+- ⚫ Archived - Abandoned
+
+### Best Practices
+- Keep scratchpads current
+- Document decisions with rationale
+- Link related tasks
+- Use acceptance criteria as checklist
+
+### Scratchpad Hierarchy & Content
+- **Main scratchpad** (`.agent/scratchpad.md`) - High-level session state only
+  - Current work-in-progress
+  - Quick links to active goals/tasks
+  - Recent session notes
+  - **DO NOT duplicate** detailed plans, decisions, or task breakdowns
+- **Goals scratchpad** (`.agent/goals/NN-*/scratchpad.md`) - Goal-level planning
+  - Objectives, success criteria, architecture decisions
+  - Task breakdown and dependencies
+  - **DO NOT duplicate** task-level implementation details
+- **Task scratchpad** (`.agent/goals/NN-*/Task-NN-*/scratchpad.md`) - Implementation details
+  - Specific code changes, file modifications
+  - Test cases, edge cases
+  - Implementation notes
+- **Reference, don't duplicate** - Link to detailed scratchpads instead of copying content
 
 ---
 
 ## Project Organization
 
 ### Hard Rules
-- **Never commit the `archive/` folder**: This folder is gitignored and used for local file storage only.
-- **Use `archive/` for local-only files**: Store experiment results, old versions, temporary research, or any files you want to keep locally but not commit.
+- **Never commit `archive/`** - gitignored, local only
+- **Use `archive/` for local files** - experiments, old versions, research
 
 ### Soft Rules
-- **Organize `archive/` by date or topic**: Use subdirectories like `archive/2024-11-03-experiment/` or `archive/old-implementations/` for better organization.
-- **Document archived decisions**: If archiving code due to an architectural decision, consider creating an ADR (Architecture Decision Record) explaining why.
-- **Clean up periodically**: The archive folder is for temporary local storage, not permanent hoarding. Clean it up occasionally.
-
-### Typical Use Cases for `archive/`
-- Old implementations before refactoring
-- Experiment results and temporary analysis
-- Alternative approaches that didn't work out
-- Draft documentation or notes
-- Local configuration variations
-- Reference code from other projects
+- Organize by date or topic
+- Document archived decisions (ADRs)
+- Clean periodically
 
 ---
 
-## Nix Development Environment
+## Nix Development
 
 ### Hard Rules
-- **Bash variable syntax in flake.nix**: When writing bash code inside Nix strings, escape bash variables with `''${VAR}` not `${VAR}`
-  - Wrong: `tag="${APP_NAME:-default}"` (Nix interprets `${APP_NAME}`)
-  - Correct: `tag="''${APP_NAME:-default}"` (bash interprets `${APP_NAME}`)
-- **No spaces in bash parameter expansion**: Use `${VAR:-default}` not `${VAR: -default}`
-  - Wrong: `${VAR: -default}` (space before `-` is substring syntax)
-  - Correct: `${VAR:-default}` (no space for default value)
-- **Indirect expansions**: Use `''${!var:-default}` with proper escaping
+- **Bash variables in Nix strings**: `''${VAR}` not `${VAR}`
+- **No spaces in parameter expansion**: `${VAR:-default}` not `${VAR: -default}`
 
 ### Rationale
-Nix uses `${...}` for its own variable interpolation. Bash variables in Nix multi-line strings must be escaped with `''${...}` to prevent Nix from trying to evaluate them. This is a common source of "undefined variable" errors.
-
----
-
-## Development Tools & Helper Functions
-
-### Nix Dev Shell Helper Functions
-
-The Nix dev shell provides helper functions to streamline common development tasks:
-
-- **`test-local`**: Run full CI checks locally (lint + format + tests with coverage)
-
-### Soft Rules for Helper Functions
-- Run `test-local` before pushing to catch issues early
+Nix uses `${...}` for interpolation. Escape bash variables with `''${...}`.
 
 ---
 
 ## Versioning
 
 ### Hard Rules
-- **Never use version 1.0.0 or higher for initial releases**: Always start with 0.0.1
-- **Semantic versioning format**: MAJOR.MINOR.PATCH (e.g., 0.0.1, 0.1.0, 0.2.1)
-- **Increment versions according to semver rules** before 1.0.0 release
-- **Version in pyproject.toml must match __version__**: Keep them in sync
+- **First version is always 0.0.0** - Tests both initial implementation AND release workflow
+- **Publish 0.0.0 to PyPI** - Real-world validation of packaging before iterating
+- **Second release is 0.0.1** - After fixes from 0.0.0 learnings
+- **Never start at 0.1.0 or 1.0.0** - Build confidence through incremental releases
+- **Semantic versioning**: MAJOR.MINOR.PATCH
+- **Sync pyproject.toml and __version__**
+
+### Version Progression
+- `0.0.0` - **First published release** - Tests initial code + packaging workflow
+- `0.0.1` - Bug fixes and improvements from 0.0.0 feedback
+- `0.0.2`, `0.0.3`, etc. - Continued iterations and refinements
+- `0.1.0` - After 5-10 patch releases (0.0.x) and proven stability
+- `0.2.0`, `0.3.0`, etc. - New features with backward compatibility
+- `1.0.0` - Production-ready, stable API, battle-tested in production
 
 ### Soft Rules
-- Document version changes in CHANGELOG.md
-- Tag releases in git with version number (e.g., `v0.0.1`)
-- Consider 1.0.0 only after API stability and real-world usage
-- Use pre-release versions for testing (e.g., `0.1.0a1`, `0.1.0rc1`)
+- Document all releases in CHANGELOG.md (including 0.0.0)
+- Git tag all releases (v0.0.0, v0.0.1, v0.0.2, etc.)
+- Expect 0.0.0 to have issues - that's the point
+- Wait for at least 5-10 patch releases (0.0.x) before 0.1.0
+- Consider 1.0.0 only after 6+ months of stable 0.x usage
+- Use pre-release versions for testing new features (0.1.0a1, 0.2.0rc1)
+
+### Rationale
+Starting at 0.0.0 accomplishes two critical goals:
+1. **Tests implementation** - Validates the initial code works
+2. **Tests release workflow** - Forces you to get packaging right from day one
+
+Version 0.0.0 signals "experimental test release - expect issues" which is honest.
+Jumping to 0.1.0 implies maturity that new projects haven't earned yet.
+
+The permanent PyPI record of 0.0.0 is a feature, not a bug:
+- Documents the project's honest journey
+- Users understand 0.0.0 means "very early experimental"
+- Forces discipline in getting basics right early
+- One workflow to learn (no TestPyPI vs PyPI confusion)
+
+Build trust through incremental releases: 0.0.0 → 0.0.x → 0.1.0 → 1.0.0
 
 ---
 
-## Deployment Guidelines
+## Deployment
 
 ### Hard Rules
-- **All tests must pass before deployment**: `pytest` with 100% pass rate
-- **Linting must pass**: `ruff check .` with no errors
-- **Docker image must build**: `docker build .` must succeed
-- **CHANGELOG must be updated**: Document what changed in this version
-- **Never deploy with debug mode enabled**: Ensure production settings
+- **Tests pass** (100% rate)
+- **Linting passes** (ruff check)
+- **Docker builds** successfully
+- **CHANGELOG updated**
+- **No debug mode** in production
 
 ### Soft Rules
-- Test Docker image locally before pushing to registry
-- Use multi-stage builds to minimize image size
-- Pin base image versions for reproducibility
-- Run security scans on images before deployment
-- Use health checks in Docker Compose / Kubernetes
-
-### Docker Build Workflow
-```bash
-# 1. Ensure clean state
-git status  # Should be clean
-uv sync
-
-# 2. Run full test suite
-uv run pytest --cov
-
-# 3. Build Docker image
-docker build -t fastmcp-template:latest .
-docker build -t fastmcp-template:v0.0.1 .
-
-# 4. Test locally
-docker run --rm -it fastmcp-template:latest --help
-
-# 5. Push to registry (if using one)
-docker tag fastmcp-template:v0.0.1 ghcr.io/l4b4r4b4b4/fastmcp-template:v0.0.1
-docker push ghcr.io/l4b4r4b4b4/fastmcp-template:v0.0.1
-
-# 6. Commit and tag
-git add .
-git commit -m "chore: release v0.0.1"
-git tag v0.0.1
-git push origin main --tags
-```
+- Test images locally
+- Multi-stage builds for size
+- Pin base image versions
+- Security scans
+- Health checks
 
 ---
 
 ## Docker Configuration
 
 ### Hard Rules
-- **Use non-root user**: Never run as root in production containers
-- **No secrets in Dockerfile**: Use environment variables or secrets management
-- **Explicit EXPOSE**: Document which ports the server uses
-- **HEALTHCHECK instruction**: Include health check for orchestration
+- **Non-root user** in production
+- **No secrets in Dockerfile** - use env vars
+- **Explicit EXPOSE** for ports
+- **HEALTHCHECK instruction** for orchestration
 
-### Dockerfile Best Practices
+### Best Practices
 ```dockerfile
-# Use specific Python version
 FROM python:3.12-slim
-
-# Install uv for fast dependency management
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
-
-# Create non-root user
 RUN useradd --create-home appuser
 WORKDIR /app
-
-# Copy dependency files first (layer caching)
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev
-
-# Copy application code
 COPY src/ ./src/
-
-# Switch to non-root user
 USER appuser
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s \
-  CMD curl -f http://localhost:8000/health || exit 1
-
-# Entry point
+HEALTHCHECK --interval=30s --timeout=3s CMD curl -f http://localhost:8000/health || exit 1
 EXPOSE 8000
-CMD ["uv", "run", "fastmcp-template"]
+CMD ["uv", "run", "your-mcp-server"]
 ```
 
 ---

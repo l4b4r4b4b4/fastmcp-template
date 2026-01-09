@@ -1,0 +1,18 @@
+{
+  "project_name": "FastMCP Template",
+  "project_slug": "{{ cookiecutter.project_name.lower().replace(' ', '-').replace('_', '-') }}",
+  "project_description": "A FastMCP server with RefCache integration",
+  "author_name": "Luke Skywalker",
+  "author_email": "lhc88@proton.me",
+  "python_version": "3.12",
+  "fastmcp_version": ">=2.14.0",
+  "mcp_refcache_version": ">=0.1.0",
+  "langfuse_version": ">=3.10.0",
+  "pydantic_version": ">=2.10.0",
+  "include_demo_tools": ["no", "yes"],
+  "include_langfuse": ["yes", "no"],
+  "github_username": "l4b4r4b4b4",
+  "__project_slug_underscore": "{{ cookiecutter.project_slug.replace('-', '_') }}",
+  "__docker_image": "{{ cookiecutter.github_username }}/{{ cookiecutter.project_slug }}",
+  "__year": "2025"
+}

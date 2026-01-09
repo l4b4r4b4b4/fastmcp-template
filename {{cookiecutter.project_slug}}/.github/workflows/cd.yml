@@ -62,34 +62,34 @@ on:
 
 # Only one deployment at a time per environment
 concurrency:
-  group: deploy-${{ github.event.inputs.environment || 'staging' }}
+  group: deploy-{%  raw %}${{ github.event.inputs.environment || 'staging' }}{% endraw %}
   cancel-in-progress: false
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository_owner }}/fastmcp-template
+  IMAGE_NAME: {%  raw %}${{ github.repository_owner }}{% endraw %}/fastmcp-template
 
 jobs:
   # Gate: Only proceed if Release workflow passed
   check-release:
     name: Verify Release
-    runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}
+    runs-on: {%  raw %}${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}{% endraw %}
     if: >
       github.event_name == 'workflow_dispatch' ||
       github.event.workflow_run.conclusion == 'success'
     outputs:
-      should_deploy: ${{ steps.check.outputs.should_deploy }}
-      image_tag: ${{ steps.check.outputs.image_tag }}
+      should_deploy: {%  raw %}${{ steps.check.outputs.should_deploy }}{% endraw %}
+      image_tag: {%  raw %}${{ steps.check.outputs.image_tag }}{% endraw %}
 
     steps:
       - name: Check release status
         id: check
         run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "Manual trigger - using tag: ${{ github.event.inputs.image_tag }}"
+          if [[ "{%  raw %}${{ github.event_name }}{% endraw %}" == "workflow_dispatch" ]]; then
+            echo "Manual trigger - using tag: {%  raw %}${{ github.event.inputs.image_tag }}{% endraw %}"
             echo "should_deploy=true" >> $GITHUB_OUTPUT
-            echo "image_tag=${{ github.event.inputs.image_tag }}" >> $GITHUB_OUTPUT
-          elif [[ "${{ github.event.workflow_run.conclusion }}" == "success" ]]; then
+            echo "image_tag={%  raw %}${{ github.event.inputs.image_tag }}{% endraw %}" >> $GITHUB_OUTPUT
+          elif [[ "{%  raw %}${{ github.event.workflow_run.conclusion }}{% endraw %}" == "success" ]]; then
             echo "Release passed - deploying latest"
             echo "should_deploy=true" >> $GITHUB_OUTPUT
             echo "image_tag=latest" >> $GITHUB_OUTPUT
@@ -106,19 +106,19 @@ jobs:
   # ---------------------------------------
   # deploy:
   #   name: Deploy via Docker Compose
-  #   runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}
+  #   runs-on: {%  raw %}${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}{% endraw %}
   #   needs: check-release
   #   if: needs.check-release.outputs.should_deploy == 'true'
   #   environment:
-  #     name: ${{ github.event.inputs.environment || 'staging' }}
+  #     name: {%  raw %}${{ github.event.inputs.environment || 'staging' }}{% endraw %}
   #
   #   steps:
   #     - name: Deploy to remote host
   #       uses: appleboy/ssh-action@v1.0.0
   #       with:
-  #         host: ${{ secrets.DEPLOY_HOST }}
-  #         username: ${{ secrets.DEPLOY_USER }}
-  #         key: ${{ secrets.DEPLOY_SSH_KEY }}
+  #         host: {%  raw %}${{ secrets.DEPLOY_HOST }}{% endraw %}
+  #         username: {%  raw %}${{ secrets.DEPLOY_USER }}{% endraw %}
+  #         key: {%  raw %}${{ secrets.DEPLOY_SSH_KEY }}{% endraw %}
   #         script: |
   #           cd /opt/fastmcp-template
   #           docker compose pull
@@ -128,7 +128,7 @@ jobs:
   # ---------------------------------
   # deploy:
   #   name: Deploy to Kubernetes
-  #   runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}
+  #   runs-on: {%  raw %}${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}{% endraw %}
   #   needs: check-release
   #   if: needs.check-release.outputs.should_deploy == 'true'
   #
@@ -137,11 +137,11 @@ jobs:
   #     - name: Set up kubectl
   #       run: |
   #         mkdir -p ~/.kube
-  #         echo "${{ secrets.KUBECONFIG }}" | base64 -d > ~/.kube/config
+  #         echo "{%  raw %}${{ secrets.KUBECONFIG }}{% endraw %}" | base64 -d > ~/.kube/config
   #     - name: Deploy
   #       run: |
   #         kubectl set image deployment/fastmcp-template \
-  #           fastmcp-template=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.check-release.outputs.image_tag }} \
+  #           fastmcp-template={%  raw %}${{ env.REGISTRY }}{% endraw %}/{%  raw %}${{ env.IMAGE_NAME }}{% endraw %}:{%  raw %}${{ needs.check-release.outputs.image_tag }}{% endraw %} \
   #           -n fastmcp
   #         kubectl rollout status deployment/fastmcp-template -n fastmcp
   #
@@ -149,25 +149,25 @@ jobs:
   # ----------------
   # deploy:
   #   name: Deploy to Fly.io
-  #   runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}
+  #   runs-on: {%  raw %}${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}{% endraw %}
   #   needs: check-release
   #   if: needs.check-release.outputs.should_deploy == 'true'
   #
   #   steps:
   #     - uses: actions/checkout@v4
   #     - uses: superfly/flyctl-actions/setup-flyctl@master
-  #     - run: flyctl deploy --image ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.check-release.outputs.image_tag }}
+  #     - run: flyctl deploy --image {%  raw %}${{ env.REGISTRY }}{% endraw %}/{%  raw %}${{ env.IMAGE_NAME }}{% endraw %}:{%  raw %}${{ needs.check-release.outputs.image_tag }}{% endraw %}
   #       env:
-  #         FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+  #         FLY_API_TOKEN: {%  raw %}${{ secrets.FLY_API_TOKEN }}{% endraw %}
 
   # Placeholder - remove when you add a real deployment
   deploy-placeholder:
     name: Deployment Placeholder
-    runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}
+    runs-on: {%  raw %}${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}{% endraw %}
     needs: check-release
     if: needs.check-release.outputs.should_deploy == 'true'
     environment:
-      name: ${{ github.event.inputs.environment || 'staging' }}
+      name: {%  raw %}${{ github.event.inputs.environment || 'staging' }}{% endraw %}
 
     steps:
       - name: Deployment info
@@ -176,8 +176,8 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Parameter | Value |" >> $GITHUB_STEP_SUMMARY
           echo "|-----------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Environment | ${{ github.event.inputs.environment || 'staging' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Image | \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.check-release.outputs.image_tag }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| Runner | \`${{ runner.name }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Environment | {%  raw %}${{ github.event.inputs.environment || 'staging' }}{% endraw %} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Image | \`{%  raw %}${{ env.REGISTRY }}{% endraw %}/{%  raw %}${{ env.IMAGE_NAME }}{% endraw %}:{%  raw %}${{ needs.check-release.outputs.image_tag }}{% endraw %}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Runner | \`{%  raw %}${{ runner.name }}{% endraw %}\` |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "> **Note:** This is a placeholder. Edit \`.github/workflows/cd.yml\` to add your deployment logic." >> $GITHUB_STEP_SUMMARY

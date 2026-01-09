@@ -1,58 +1,76 @@
 {
-  "$schema": "zed://schemas/settings",
-  "terminal": {
-    "env": {
-      "PYTHONPATH": "./src"
-    }
-  },
-  "lsp": {
-    "pyright": {
-      "settings": {
-        "python.pythonPath": ".venv/bin/python",
-        "python.analysis": {
-          "extraPaths": ["src"],
-          "diagnosticMode": "workspace",
-          "typeCheckingMode": "strict"
-        }
-      }
-    }
-  },
   "languages": {
     "Python": {
       "format_on_save": {
         "external": {
           "command": "ruff",
-          "arguments": ["format", "-"]
+          "arguments": ["format", "--stdin-filename", "{buffer_path}", "-"]
         }
       },
-      "language_servers": ["pyright"]
+      "formatter": {
+        "external": {
+          "command": "ruff",
+          "arguments": ["format", "--stdin-filename", "{buffer_path}", "-"]
+        }
+      },
+      "code_actions_on_format": {
+        "source.organizeImports": true,
+        "source.fixAll": true
+      }
+    },
+    "Nix": {
+      "tab_size": 2
+    },
+    "YAML": {
+      "tab_size": 2
+    },
+    "TOML": {
+      "tab_size": 2
     }
   },
-  "context_servers": {
-    "nixos": {
-      "command": "uvx",
-      "args": ["mcp-nixos"]
-    },
-    "pypi": {
-      "command": "uvx",
-      "args": ["pypi-query-mcp-server"]
-    },
-    "context7": {
-      "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp"]
-    },
-    "langfuse-docs": {
-      "command": "npx",
-      "args": ["mcp-remote", "https://langfuse.com/api/mcp"]
-    },
-    "fastmcp-template": {
-      "command": "uvx",
-      "args": ["fastmcp-template", "stdio"],
-      "env": {
-        "LANGFUSE_PUBLIC_KEY": "",
-        "LANGFUSE_SECRET_KEY": "",
-        "LANGFUSE_HOST": "https://cloud.langfuse.com"
+  "lsp": {
+    "pyright": {
+      "settings": {
+        "python": {
+          "pythonPath": ".venv/bin/python",
+          "analysis": {
+            "typeCheckingMode": "basic",
+            "autoSearchPaths": true,
+            "useLibraryCodeForTypes": true,
+            "diagnosticMode": "workspace"
+          }
+        }
       }
     }
+  },
+  "tab_size": 4,
+  "soft_wrap": "editor_width",
+  "preferred_line_length": 88,
+  "remove_trailing_whitespace_on_save": "on",
+  "ensure_final_newline_on_save": true,
+  "file_scan_exclusions": [
+    "**/.venv",
+    "**/.mypy_cache",
+    "**/.pytest_cache",
+    "**/.ruff_cache",
+    "**/archive",
+    "**/__pycache__",
+    "**/node_modules",
+    "**/.git",
+    "**/dist",
+    "**/*.egg-info"
+  ],
+  "git": {
+    "git_gutter": "tracked_files"
+  },
+  "telemetry": {
+    "diagnostics": false,
+    "metrics": false
+  },
+  "terminal": {
+    "shell": {
+      "program": "zsh"
+    },
+    "working_directory": "current_project_directory"
   }
 }

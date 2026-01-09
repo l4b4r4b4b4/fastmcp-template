@@ -16,10 +16,15 @@ repos:
     rev: v4.5.0
     hooks:
       - id: trailing-whitespace
+        exclude: ^\.zed/
       - id: end-of-file-fixer
+        exclude: ^\.zed/
       - id: check-yaml
+        exclude: ^\.zed/
       - id: check-json
+        exclude: ^\.zed/
       - id: check-toml
+        exclude: ^\.zed/
       - id: check-added-large-files
         args: [--maxkb=1000]
       - id: check-merge-conflict
