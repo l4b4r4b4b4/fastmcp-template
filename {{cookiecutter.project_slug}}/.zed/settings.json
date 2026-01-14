@@ -45,21 +45,21 @@
       "command": "npx",
       "args": ["mcp-remote", "https://langfuse.com/api/mcp"],
     },
-    "fastmcp-template-dev": {
+    "{{ cookiecutter.project_slug }}-dev": {
       "command": "uv",
-      "args": ["run", "fastmcp-template", "stdio"],
+      "args": ["run", "{{ cookiecutter.project_slug }}", "stdio"],
       "cwd": "{worktree_root}",
       "env": {
         "PYTHONUNBUFFERED": "1",
       },
     },
-    "fastmcp-template-server-local": {
+    "{{ cookiecutter.project_slug }}-server-local": {
       "command": "npx",
       "args": ["mcp-remote", "http://localhost:8000/mcp"],
     },
-    "fastmcp-lib": {
+    "{{ cookiecutter.project_slug }}-lib": {
       "command": "uvx",
-      "args": ["fastmcp-template", "stdio"],
+      "args": ["{{ cookiecutter.project_slug }}", "stdio"],
       "env": {
         "LANGFUSE_PUBLIC_KEY": "",
         "LANGFUSE_SECRET_KEY": "",
