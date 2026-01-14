@@ -18,7 +18,7 @@
           config.allowUnfree = true;
         };
 
-        fhsEnv = pkgs.buildFHSEnv {
+        devEnv = pkgs.buildFHSEnv {
           name = "fastmcp-template-dev-env";
 
           targetPkgs = pkgs':
@@ -62,7 +62,7 @@
 
           runScript = ''
             # Set shell for the environment
-            SHELL=''${pkgs.zsh}/bin/zsh
+            export SHELL=${pkgs.zsh}/bin/zsh
 
             echo "🍪 Template Development Quick Reference:"
             echo ""
@@ -86,16 +86,11 @@
             echo ""
 
             # Start zsh shell
-            exec ''${pkgs.zsh}/bin/zsh
+            exec ${pkgs.zsh}/bin/zsh
           '';
         };
       in {
-        devShells.default = pkgs.mkShell {
-          shellHook = ''
-            exec ''${fhsEnv}/bin/fastmcp-template-dev-env
-          '';
-        };
-
+        devShells.default = devEnv;
         packages.default = pkgs.python312;
       }
     );
