@@ -1,0 +1,50 @@
+# Pre-commit hooks for fastmcp-template development
+# This is for the cookiecutter template itself, not generated projects
+#
+# Install with: uv run pre-commit install
+# Run manually: uv run pre-commit run --all-files
+
+repos:
+  # Basic file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^(\.zed/|\.agent/|\{\{cookiecutter\.project_slug\}\}/)
+      - id: end-of-file-fixer
+        exclude: ^(\.zed/|\.agent/|\{\{cookiecutter\.project_slug\}\}/)
+      - id: check-yaml
+        exclude: ^(\.zed/|\.agent/|\{\{cookiecutter\.project_slug\}\}/)
+        args: [--allow-multiple-documents]
+      - id: check-json
+        exclude: ^(\.zed/|\.agent/|\{\{cookiecutter\.project_slug\}\}/)
+      - id: check-toml
+        exclude: ^(\.zed/|\.agent/|\{\{cookiecutter\.project_slug\}\}/)
+      - id: check-added-large-files
+        args: [--maxkb=1000]
+      - id: check-merge-conflict
+      - id: detect-private-key
+        exclude: ^(\.zed/|\.agent/|\{\{cookiecutter\.project_slug\}\}/)
+      - id: no-commit-to-branch
+        args: [--branch, main]
+
+# Note: Python linting (ruff, bandit, etc.) is NOT included here because:
+# - Template files contain {{ cookiecutter.* }} Jinja2 syntax
+# - These are not valid Python files until after generation
+# - Generated projects have their own .pre-commit-config.yaml with full Python checks
+#
+# Note: Nix formatting (nixpkgs-fmt) is NOT included here because:
+# - It requires Rust toolchain compilation which may not be available
+# - Use `nix develop` shell for nix formatting: nixpkgs-fmt flake.nix
+#
+# Excluded directories:
+# - .zed/         - IDE settings with trailing commas (JSON5-style)
+# - .agent/       - AI assistant workspace files
+# - {{cookiecutter.project_slug}}/  - Template files with Jinja2 syntax
+
+# CI configuration
+ci:
+  autofix_commit_msg: "style: auto-fix by pre-commit hooks"
+  autofix_prs: true
+  autoupdate_commit_msg: "chore: update pre-commit hooks"
+  autoupdate_schedule: weekly
