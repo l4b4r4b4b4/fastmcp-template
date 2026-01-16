@@ -1,5 +1,15 @@
 # {{ cookiecutter.project_name }}
 
+[![CI](https://github.com/{{ cookiecutter.github_username }}/{{ cookiecutter.project_slug }}/actions/workflows/ci.yml/badge.svg)](https://github.com/{{ cookiecutter.github_username }}/{{ cookiecutter.project_slug }}/actions/workflows/ci.yml)
+[![PyPI version](https://img.shields.io/pypi/v/{{ cookiecutter.project_slug }}.svg)](https://pypi.org/project/{{ cookiecutter.project_slug }}/)
+[![Python {{ cookiecutter.python_version }}+](https://img.shields.io/badge/python-{{ cookiecutter.python_version }}%2B-blue.svg)](https://www.python.org/downloads/)
+{% if cookiecutter.license == "MIT" %}[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT){% endif %}
+{% if cookiecutter.license == "Apache-2.0" %}[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0){% endif %}
+{% if cookiecutter.license == "GPL-3.0" %}[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0){% endif %}
+{% if cookiecutter.license == "BSD-3-Clause" %}[![License: BSD 3-Clause](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause){% endif %}
+{% if cookiecutter.license == "Proprietary" %}[![License: Proprietary](https://img.shields.io/badge/License-Proprietary-red.svg)](LICENSE){% endif %}
+[![GHCR](https://img.shields.io/badge/GHCR-{{ cookiecutter.project_slug }}-blue?logo=github)](https://ghcr.io/{{ cookiecutter.github_username }}/{{ cookiecutter.project_slug }})
+
 {{ cookiecutter.project_description }}
 
 Built with [FastMCP](https://github.com/jlowin/fastmcp) and [mcp-refcache](https://github.com/l4b4r4b4b4/mcp-refcache) for efficient handling of large data in AI agent tools.
@@ -245,6 +255,52 @@ uvx {{ cookiecutter.project_slug }} sse --port 8000                # SSE on port
 uvx {{ cookiecutter.project_slug }} streamable-http --host 0.0.0.0 # Docker/remote mode
 ```
 
+## CI/CD Workflow
+
+This project uses a CI-gated workflow to ensure code quality and safe releases:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Feature Branch → Open PR                                   │
+│         ↓                                                    │
+│  CI Runs (lint, test, security)                            │
+│         ↓                                                    │
+│  ✅ CI Must Pass (enforced by branch protection)           │
+│         ↓                                                    │
+│  Merge to main                                              │
+└─────────────────────────────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────────────┐
+│  CI Re-runs on main                                         │
+│         ↓                                                    │
+│  Release Workflow waits for CI Success                      │
+│         ↓                                                    │
+│  Docker Images Built & Pushed to GHCR                       │
+└─────────────────────────────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────────────┐
+│  Manually Create GitHub Release                             │
+│         ↓                                                    │
+│  Publish Workflow verifies Release succeeded                │
+│         ↓                                                    │
+│  Package Published to PyPI                                  │
+└─────────────────────────────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────────────┐
+│  CD Workflow deploys (staging/production)                   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Key Safeguards:**
+- ✅ Branch protection ensures CI passes before merge
+- ✅ Tag pushes verify CI passed before building images
+- ✅ Publish workflow verifies Release succeeded before PyPI upload
+- ✅ CD workflow only deploys after Release completes
+
+**Manual Gates:**
+- 🔒 Creating GitHub Release (allows review before PyPI publish)
+- 🔒 Production deployments (requires manual approval)
+
 ## Publishing
 
 ### PyPI
@@ -264,7 +320,7 @@ Images are automatically published to GHCR on:
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
+{{ cookiecutter.license }} License - see [LICENSE](LICENSE) for details.
 
 ## Contributing
 

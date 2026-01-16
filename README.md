@@ -1,5 +1,6 @@
 # FastMCP Cookiecutter Template
 
+[![Template CI](https://github.com/l4b4r4b4b4/fastmcp-template/actions/workflows/test-template.yml/badge.svg)](https://github.com/l4b4r4b4b4/fastmcp-template/actions/workflows/test-template.yml)
 [![Template Verified](https://img.shields.io/badge/Template-4%2F4%20Configs%20Verified-success?style=flat-square&logo=checkmarx&logoColor=white)](VERIFICATION.md)
 [![Last Verified](https://img.shields.io/badge/Last%20Verified-Jan%202025-blue?style=flat-square&logo=calendar&logoColor=white)](VERIFICATION.md)
 [![Tests Passing](https://img.shields.io/badge/Tests-346%2F346%20Passing-brightgreen?style=flat-square&logo=pytest&logoColor=white)](VERIFICATION.md)
@@ -202,15 +203,68 @@ your-mcp-server/
    - Register in `app/server.py`
    - Add tests in `tests/`
 
-5. **Verify template functionality**
-   - See [VERIFICATION.md](VERIFICATION.md) for comprehensive testing results
-   - All 4 configurations verified with 100% pass rate
-   - Includes manual verification commands
-
 5. **Configure GitHub publishing** (optional)
    - PyPI: Add trusted publisher at pypi.org
    - GHCR: GitHub Actions will publish on release
 
+## Testing the Template
+
+### Automated CI Testing
+
+The template is automatically tested on every push and pull request. CI validates all 4 configurations:
+- ✅ Minimal (no/no) - 74 tests
+- ✅ Full (yes/yes) - 101 tests
+- ✅ Demos Only (yes/no) - 86 tests
+- ✅ Secrets Only (no/yes) - 85 tests
+
+Each configuration is tested for:
+- Successful project generation
+- All tests passing
+- Linting passes (ruff check)
+- No hardcoded template values
+- Correct test count
+
+### Local Testing
+
+Test a specific configuration before submitting changes:
+
+```bash
+# Test minimal configuration
+./scripts/validate-template.sh minimal
+
+# Test full configuration
+./scripts/validate-template.sh full
+
+# Test all configurations
+./scripts/validate-template.sh --all
+```
+
+### Manual Verification
+
+Generate and test a project manually:
+
+```bash
+# Generate project
+uv run cookiecutter . --output-dir /tmp/test-project --no-input \
+  project_name="Test Project" \
+  include_demo_tools=yes \
+  include_secret_tools=no
+
+# Test generated project
+cd /tmp/test-project/test-project
+uv run pytest -v
+uv run ruff check .
+```
+
+### Verification Report
+
+See [VERIFICATION.md](VERIFICATION.md) for comprehensive manual testing results:
+- Detailed test breakdowns for all configurations
+- Manual verification of demo tools functionality
+- Architecture notes and troubleshooting guides
+- 346 total tests verified across all configurations
+
+## Features in Detail
 ## Development
 
 To work on the template itself (not generate projects):

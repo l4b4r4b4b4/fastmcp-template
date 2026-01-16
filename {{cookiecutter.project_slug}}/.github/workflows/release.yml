@@ -94,6 +94,32 @@ jobs:
             echo "changed=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Verify CI passed for tag pushes
+        if: github.event_name == 'push' && github.ref_type == 'tag'
+        env:
+          GH_TOKEN: {% raw %}${{ secrets.GITHUB_TOKEN }}{% endraw %}
+        run: |
+          echo "Tag push detected - verifying CI passed for this commit"
+
+          # Query GitHub API for CI workflow status on this commit
+          CI_STATUS=$(gh api repos/{% raw %}${{ github.repository }}{% endraw %}/commits/{% raw %}${{ github.sha }}{% endraw %}/check-runs \
+            --jq '.check_runs[] | select(.name == "CI Success") | .conclusion' \
+            || echo "not_found")
+
+          if [[ "$CI_STATUS" == "success" ]]; then
+            echo "✅ CI passed for this commit"
+          else
+            echo "❌ ERROR: CI has not passed for this commit (status: $CI_STATUS)"
+            echo ""
+            echo "Please ensure CI passes before pushing version tags:"
+            echo "  1. Merge your PR to main"
+            echo "  2. Wait for CI to pass on main"
+            echo "  3. Then push the version tag"
+            echo ""
+            echo "Current commit: {% raw %}${{ github.sha }}{% endraw %}"
+            exit 1
+          fi
+
       - name: Check CI status and extract version
         id: check
         run: |

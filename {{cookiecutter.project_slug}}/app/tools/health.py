@@ -1,4 +1,4 @@
-"""Health check tools for FastMCP Template Server.
+"""Health check tools for {{ cookiecutter.project_name }}.
 
 This module provides health check functionality for monitoring
 server status and verifying tracing configuration.
@@ -33,7 +33,7 @@ def create_health_check(cache: RefCache) -> Any:
         """
         return {
             "status": "healthy",
-            "server": "fastmcp-template",
+            "server": "{{ cookiecutter.project_slug }}",
             "cache": cache.name,
             "langfuse_enabled": is_langfuse_enabled(),
             "test_mode": is_test_mode_enabled(),

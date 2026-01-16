@@ -1,4 +1,4 @@
-"""Langfuse tracing integration for FastMCP Template.
+"""Langfuse tracing integration for {{ cookiecutter.project_name }}.
 
 This module provides Langfuse observability integration for mcp-refcache,
 enabling comprehensive tracing of cache operations in MCP tools.

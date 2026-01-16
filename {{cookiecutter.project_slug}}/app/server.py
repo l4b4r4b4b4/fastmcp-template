@@ -32,10 +32,12 @@ from mcp_refcache.fastmcp import cache_instructions, register_admin_tools
 
 from app.prompts import langfuse_guide, template_guide
 from app.tools import (
-    create_compute_with_secret,
     create_get_cached_result,
     create_health_check,
+{% if cookiecutter.include_secret_tools == "yes" %}
+    create_compute_with_secret,
     create_store_secret,
+{% endif %}
 {% if cookiecutter.include_langfuse == "yes" %}
     enable_test_context,
     get_trace_info,
@@ -73,8 +75,10 @@ Available tools:
 - hello: Simple greeting tool (no caching)
 - generate_items: Generate a list of items (cached in public namespace)
 {% endif %}
+{% if cookiecutter.include_secret_tools == "yes" %}
 - store_secret: Store a secret value for private computation
 - compute_with_secret: Use a secret in computation without revealing it
+{% endif %}
 - get_cached_result: Retrieve or paginate through cached results
 {% if cookiecutter.include_langfuse == "yes" %}
 - enable_test_context: Enable/disable test context for Langfuse demos
@@ -116,8 +120,10 @@ cache = _cache
 
 # These are created with factory functions and bound to the cache instance.
 # We keep references for testing and re-export them as module attributes.
+{% if cookiecutter.include_secret_tools == "yes" %}
 store_secret = create_store_secret(cache)
 compute_with_secret = create_compute_with_secret(cache)
+{% endif %}
 get_cached_result = create_get_cached_result(cache)
 health_check = create_health_check(_cache)
 
@@ -174,8 +180,10 @@ mcp.tool(get_trace_info)
 
 {% endif %}
 # Cache-bound tools (using pre-created module-level functions)
+{% if cookiecutter.include_secret_tools == "yes" %}
 mcp.tool(store_secret)
 mcp.tool(compute_with_secret)
+{% endif %}
 mcp.tool(get_cached_result)
 mcp.tool(health_check)
 

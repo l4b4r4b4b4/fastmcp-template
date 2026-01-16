@@ -1,4 +1,4 @@
-"""Prompts module for FastMCP Template Server.
+"""Prompts module for {{ cookiecutter.project_name }}.
 
 This module contains MCP prompts that provide guidance and documentation
 for using the server features.
@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from mcp_refcache.fastmcp import cache_guide_prompt
 
-TEMPLATE_GUIDE = f"""# FastMCP Template Guide
+TEMPLATE_GUIDE = f"""# {{ cookiecutter.project_name }} Guide
 
 ## Langfuse Tracing
 
