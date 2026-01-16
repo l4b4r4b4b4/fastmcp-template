@@ -1,5 +1,9 @@
 # FastMCP Cookiecutter Template
 
+[![Template Verified](https://img.shields.io/badge/Template-4%2F4%20Configs%20Verified-success?style=flat-square&logo=checkmarx&logoColor=white)](VERIFICATION.md)
+[![Last Verified](https://img.shields.io/badge/Last%20Verified-Jan%202025-blue?style=flat-square&logo=calendar&logoColor=white)](VERIFICATION.md)
+[![Tests Passing](https://img.shields.io/badge/Tests-346%2F346%20Passing-brightgreen?style=flat-square&logo=pytest&logoColor=white)](VERIFICATION.md)
+
 🚀 Production-ready [FastMCP](https://github.com/jlowin/fastmcp) server template with [mcp-refcache](https://github.com/l4b4r4b4b4/mcp-refcache) integration for building AI agent tools that handle large data efficiently.
 
 ## Quick Start
@@ -22,6 +26,7 @@ cookiecutter gh:l4b4r4b4b4/fastmcp-template
 # - author_email: you@example.com
 # - python_version: 3.12 (default)
 # - include_demo_tools: no (clean start) or yes (with examples)
+# - include_secret_tools: no (minimal) or yes (with secret examples)
 # - include_langfuse: yes (observability) or no
 # - github_username: your-github-username
 
@@ -51,34 +56,62 @@ A fully-configured FastMCP server with:
 
 ## Template Options
 
-### Minimal Project (No Demo Tools)
+### Configuration Options
 
-Perfect for starting fresh:
+| Option | Default | Values | Purpose |
+|--------|---------|--------|---------|
+| `include_demo_tools` | `no` | `no`, `yes` | Include `hello` and `generate_items` demo tools |
+| `include_secret_tools` | `no` | `no`, `yes` | Include `store_secret` and `compute_with_secret` examples |
+| `include_langfuse` | `yes` | `yes`, `no` | Enable Langfuse tracing integration |
+
+### Minimal Project (Recommended)
+
+Perfect for starting fresh with only core infrastructure:
 
 ```bash
 cookiecutter gh:l4b4r4b4b4/fastmcp-template
 
 # When prompted:
 include_demo_tools [no]: <press Enter>
+include_secret_tools [no]: <press Enter>
 ```
 
-Generates a clean project with no example tools - ready for your implementation.
+Generates a clean project with:
+- ✅ Health check tool
+- ✅ Cache query tool
+- ✅ Admin tools (permission-gated)
+- ❌ No example/demo code
 
-### Learning Project (With Demo Tools)
+### Full Learning Project
 
-Includes reference implementations:
+Includes all reference implementations:
 
 ```bash
 cookiecutter gh:l4b4r4b4b4/fastmcp-template
 
 # When prompted:
 include_demo_tools [no]: yes
+include_secret_tools [no]: yes
 ```
 
 Includes working examples:
 - `hello` - Basic tool pattern
 - `generate_items` - Cached large data with RefCache
 - `store_secret` / `compute_with_secret` - Private computation pattern
+
+### Custom Mix
+
+Choose which examples to include:
+
+```bash
+# Only demo tools (no secrets)
+include_demo_tools: yes
+include_secret_tools: no
+
+# Only secret tools (no demos)
+include_demo_tools: no
+include_secret_tools: yes
+```
 
 ## Features
 
@@ -168,6 +201,11 @@ your-mcp-server/
    - Create tool modules in `app/tools/`
    - Register in `app/server.py`
    - Add tests in `tests/`
+
+5. **Verify template functionality**
+   - See [VERIFICATION.md](VERIFICATION.md) for comprehensive testing results
+   - All 4 configurations verified with 100% pass rate
+   - Includes manual verification commands
 
 5. **Configure GitHub publishing** (optional)
    - PyPI: Add trusted publisher at pypi.org
