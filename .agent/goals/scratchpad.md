@@ -12,8 +12,8 @@
 | 02 | Fix Demo Tools & Tests Consistency | 🟢 Complete | High | 2025-01-08 |
 | 03 | Add Minimal Tools Option | 🟢 Complete | Medium | 2025-01-08 |
 | 04 | Enforce CI-Gated Workflow | 🟢 Complete | High | 2025-01-08 |
-| 05 | Add Template CI Testing | ⚪ Not Started | High | 2025-01-08 |
-| 06 | Add Template Variants | ⚪ Not Started | Medium | 2025-01-08 |
+| 05 | Add Template CI Testing | 🟢 Complete | High | 2025-01-16 |
+| 06 | Add Template Variants + Custom | 🟢 Complete | Medium | 2025-01-16 |
 | 07 | Add Example Integrations | ⚪ Not Started | Medium | 2025-01-08 |
 | 08 | (Reserved) | ⚪ Not Started | - | - |
 | 09 | (Reserved) | ⚪ Not Started | - | - |
@@ -76,6 +76,27 @@
 ---
 
 ## Recent Activity
+
+- **2025-01-16:** Goal 06 Complete - Add Template Variants + Custom ✅
+  - Added `template_variant` with 3 presets + custom option
+  - Presets: minimal (60 tests), standard (75 tests), full (101 tests)
+  - Custom: Allows any of 8 possible combinations (choose demo/secret/langfuse individually)
+  - Added Jinja computed variables to template files
+  - Hybrid logic: `(variant == 'full') or (variant == 'custom' and option == 'yes')`
+  - Added pre_gen_project.py hook for both preset and custom display
+  - Updated validation script and CI workflow for 5 configurations
+  - CI tests: 3 presets + 2 custom examples (demos-only, secrets-only)
+  - Updated README.md with custom variant documentation
+  - All 5 configurations validated successfully
+  - Total tests: 397 (60 + 75 + 101 + 85 + 76)
+  - **Best of both worlds:** 90% use simple presets, 10% get full control
+  - **Documentation Polish:** Updated VERIFICATION.md to reflect 4 variants + 5 configurations
+
+- **2025-01-16:** Goal 05 Complete - Add Template CI Testing ✅
+  - CI workflow testing all variants in parallel
+  - Local validation script matching CI exactly
+  - CONTRIBUTING.md with complete development guide
+  - All configurations verified and passing
 
 - **2025-01-08:** Goals 05-07 Created - Future Enhancements 📋
   - Goal 05: Add Template CI Testing - Automated testing of all configurations

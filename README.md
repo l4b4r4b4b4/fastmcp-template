@@ -1,9 +1,9 @@
 # FastMCP Cookiecutter Template
 
 [![Template CI](https://github.com/l4b4r4b4b4/fastmcp-template/actions/workflows/test-template.yml/badge.svg)](https://github.com/l4b4r4b4b4/fastmcp-template/actions/workflows/test-template.yml)
-[![Template Verified](https://img.shields.io/badge/Template-4%2F4%20Configs%20Verified-success?style=flat-square&logo=checkmarx&logoColor=white)](VERIFICATION.md)
+[![Template Verified](https://img.shields.io/badge/Template-5%2F5%20Configs%20Verified-success?style=flat-square&logo=checkmarx&logoColor=white)](VERIFICATION.md)
 [![Last Verified](https://img.shields.io/badge/Last%20Verified-Jan%202025-blue?style=flat-square&logo=calendar&logoColor=white)](VERIFICATION.md)
-[![Tests Passing](https://img.shields.io/badge/Tests-346%2F346%20Passing-brightgreen?style=flat-square&logo=pytest&logoColor=white)](VERIFICATION.md)
+[![Tests Passing](https://img.shields.io/badge/Tests-397%2F397%20Passing-brightgreen?style=flat-square&logo=pytest&logoColor=white)](VERIFICATION.md)
 
 🚀 Production-ready [FastMCP](https://github.com/jlowin/fastmcp) server template with [mcp-refcache](https://github.com/l4b4r4b4b4/mcp-refcache) integration for building AI agent tools that handle large data efficiently.
 
@@ -16,20 +16,13 @@
 uv tool install cookiecutter
 # or: pipx install cookiecutter
 
-# Generate your project
+# Generate your project (interactive)
 cookiecutter gh:l4b4r4b4b4/fastmcp-template
 
-# Follow the prompts:
-# - project_name: Your MCP Server
-# - project_slug: your-mcp-server (auto-generated)
-# - project_description: What your server does
-# - author_name: Your Name
-# - author_email: you@example.com
-# - python_version: 3.12 (default)
-# - include_demo_tools: no (clean start) or yes (with examples)
-# - include_secret_tools: no (minimal) or yes (with secret examples)
-# - include_langfuse: yes (observability) or no
-# - github_username: your-github-username
+# Or use a variant directly (no prompts)
+cookiecutter gh:l4b4r4b4b4/fastmcp-template --no-input \
+  project_name="My Server" \
+  template_variant=standard
 
 # Navigate to your new project
 cd your-mcp-server
@@ -55,64 +48,89 @@ A fully-configured FastMCP server with:
 - ✅ **Testing Ready** - pytest with 73% coverage requirement
 - ✅ **Pre-commit Hooks** - Ruff formatting and linting
 
-## Template Options
+## Template Variants
 
-### Configuration Options
+Choose a variant based on your needs:
 
-| Option | Default | Values | Purpose |
-|--------|---------|--------|---------|
-| `include_demo_tools` | `no` | `no`, `yes` | Include `hello` and `generate_items` demo tools |
-| `include_secret_tools` | `no` | `no`, `yes` | Include `store_secret` and `compute_with_secret` examples |
-| `include_langfuse` | `yes` | `yes`, `no` | Enable Langfuse tracing integration |
+| Variant | Demo Tools | Secret Tools | Langfuse | Tests | Best For |
+|---------|------------|--------------|----------|-------|----------|
+| `minimal` | ❌ | ❌ | ❌ | 60 | Production servers, clean slate |
+| `standard` | ❌ | ❌ | ✅ | 75 | Recommended with observability |
+| `full` | ✅ | ✅ | ✅ | 101 | Learning, reference implementation |
+| `custom` | (choose) | (choose) | (choose) | varies | Advanced users, specific needs |
 
-### Minimal Project (Recommended)
+### Minimal (Production)
 
-Perfect for starting fresh with only core infrastructure:
+Clean slate with no demo code - perfect for production servers:
 
 ```bash
-cookiecutter gh:l4b4r4b4b4/fastmcp-template
-
-# When prompted:
-include_demo_tools [no]: <press Enter>
-include_secret_tools [no]: <press Enter>
+cookiecutter gh:l4b4r4b4b4/fastmcp-template --no-input \
+  project_name="My Server" \
+  template_variant=minimal
 ```
 
-Generates a clean project with:
+Generates:
 - ✅ Health check tool
 - ✅ Cache query tool
 - ✅ Admin tools (permission-gated)
-- ❌ No example/demo code
+- ❌ No demo/example code
+- ❌ No Langfuse dependency
 
-### Full Learning Project
+### Standard (Recommended)
 
-Includes all reference implementations:
+Production-ready with Langfuse observability:
+
+```bash
+cookiecutter gh:l4b4r4b4b4/fastmcp-template --no-input \
+  project_name="My Server" \
+  template_variant=standard
+```
+
+Includes everything in minimal plus:
+- ✅ Langfuse tracing integration
+- ✅ Context management tools
+- ✅ Trace info tools
+
+### Full (Learning)
+
+All features and examples for learning:
+
+```bash
+cookiecutter gh:l4b4r4b4b4/fastmcp-template --no-input \
+  project_name="My Server" \
+  template_variant=full
+```
+
+Includes everything plus:
+- ✅ `hello` - Basic tool pattern
+- ✅ `generate_items` - Cached large data with RefCache
+- ✅ `store_secret` / `compute_with_secret` - Private computation pattern
+
+### Custom (Advanced)
+
+Choose exactly which features you want:
 
 ```bash
 cookiecutter gh:l4b4r4b4b4/fastmcp-template
 
 # When prompted:
+template_variant: custom
 include_demo_tools [no]: yes
-include_secret_tools [no]: yes
+include_secret_tools [no]: no
+include_langfuse [yes]: yes
 ```
 
-Includes working examples:
-- `hello` - Basic tool pattern
-- `generate_items` - Cached large data with RefCache
-- `store_secret` / `compute_with_secret` - Private computation pattern
-
-### Custom Mix
-
-Choose which examples to include:
-
+Or non-interactively:
 ```bash
-# Only demo tools (no secrets)
-include_demo_tools: yes
-include_secret_tools: no
-
-# Only secret tools (no demos)
-include_demo_tools: no
-include_secret_tools: yes
+cookiecutter gh:l4b4r4b4b4/fastmcp-template --no-input \
+  project_name="My Server" \
+  template_variant=custom \
+  include_demo_tools=yes \
+  include_secret_tools=no \
+  include_langfuse=yes
 ```
+
+This gives you full control over all 8 possible combinations of features.
 
 ## Features
 
@@ -211,11 +229,12 @@ your-mcp-server/
 
 ### Automated CI Testing
 
-The template is automatically tested on every push and pull request. CI validates all 4 configurations:
-- ✅ Minimal (no/no) - 74 tests
-- ✅ Full (yes/yes) - 101 tests
-- ✅ Demos Only (yes/no) - 86 tests
-- ✅ Secrets Only (no/yes) - 85 tests
+The template is automatically tested on every push and pull request. CI validates 5 configurations:
+- ✅ Minimal - 60 tests
+- ✅ Standard - 75 tests
+- ✅ Full - 101 tests
+- ✅ Custom (demos only) - 85 tests
+- ✅ Custom (secrets only) - 76 tests
 
 Each configuration is tested for:
 - Successful project generation
@@ -226,16 +245,19 @@ Each configuration is tested for:
 
 ### Local Testing
 
-Test a specific configuration before submitting changes:
+Test a specific variant before submitting changes:
 
 ```bash
-# Test minimal configuration
+# Test preset variants
 ./scripts/validate-template.sh minimal
-
-# Test full configuration
+./scripts/validate-template.sh standard
 ./scripts/validate-template.sh full
 
-# Test all configurations
+# Test custom combinations
+./scripts/validate-template.sh custom-demos-only
+./scripts/validate-template.sh custom-secrets-only
+
+# Test all variants
 ./scripts/validate-template.sh --all
 ```
 
@@ -247,8 +269,7 @@ Generate and test a project manually:
 # Generate project
 uv run cookiecutter . --output-dir /tmp/test-project --no-input \
   project_name="Test Project" \
-  include_demo_tools=yes \
-  include_secret_tools=no
+  template_variant=full
 
 # Test generated project
 cd /tmp/test-project/test-project
@@ -259,10 +280,10 @@ uv run ruff check .
 ### Verification Report
 
 See [VERIFICATION.md](VERIFICATION.md) for comprehensive manual testing results:
-- Detailed test breakdowns for all configurations
+- Detailed test breakdowns for all variants
 - Manual verification of demo tools functionality
 - Architecture notes and troubleshooting guides
-- 346 total tests verified across all configurations
+- 397 total tests verified across 5 configurations (60 + 75 + 101 + 85 + 76)
 
 ## Features in Detail
 ## Development

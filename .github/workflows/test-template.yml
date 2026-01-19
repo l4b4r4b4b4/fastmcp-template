@@ -9,28 +9,30 @@ on:
 
 jobs:
   test-template-generation:
-    name: Test ${{ matrix.config.name }} configuration
+    name: Test ${{ matrix.variant.name }} variant
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        config:
+        variant:
           - name: minimal
-            demo_tools: "no"
-            secret_tools: "no"
+            expected_tests: 60
+          - name: standard
             expected_tests: 75
           - name: full
-            demo_tools: "yes"
-            secret_tools: "yes"
             expected_tests: 101
-          - name: demos-only
-            demo_tools: "yes"
-            secret_tools: "no"
-            expected_tests: 86
-          - name: secrets-only
-            demo_tools: "no"
-            secret_tools: "yes"
+          - name: custom-demos-only
+            template_variant: custom
+            include_demo_tools: yes
+            include_secret_tools: no
+            include_langfuse: yes
             expected_tests: 85
+          - name: custom-secrets-only
+            template_variant: custom
+            include_demo_tools: no
+            include_secret_tools: yes
+            include_langfuse: no
+            expected_tests: 76
 
     steps:
       - name: Checkout template repository
@@ -51,42 +53,51 @@ jobs:
 
       - name: Generate project from template
         run: |
-          uv tool run cookiecutter . --output-dir /tmp/test-output --no-input \
-            project_name="Test ${{ matrix.config.name }}" \
-            project_slug="test-${{ matrix.config.name }}" \
-            include_demo_tools="${{ matrix.config.demo_tools }}" \
-            include_secret_tools="${{ matrix.config.secret_tools }}"
+          if [ "${{ matrix.variant.template_variant }}" == "custom" ]; then
+            uv tool run cookiecutter . --output-dir /tmp/test-output --no-input \
+              project_name="Test ${{ matrix.variant.name }}" \
+              project_slug="test-${{ matrix.variant.name }}" \
+              template_variant="${{ matrix.variant.template_variant }}" \
+              include_demo_tools="${{ matrix.variant.include_demo_tools }}" \
+              include_secret_tools="${{ matrix.variant.include_secret_tools }}" \
+              include_langfuse="${{ matrix.variant.include_langfuse }}"
+          else
+            uv tool run cookiecutter . --output-dir /tmp/test-output --no-input \
+              project_name="Test ${{ matrix.variant.name }}" \
+              project_slug="test-${{ matrix.variant.name }}" \
+              template_variant="${{ matrix.variant.name }}"
+          fi
 
       - name: List generated files
         run: |
           echo "Generated project structure:"
-          ls -la /tmp/test-output/test-${{ matrix.config.name }}/
+          ls -la /tmp/test-output/test-${{ matrix.variant.name }}/
 
       - name: Run tests in generated project
-        working-directory: /tmp/test-output/test-${{ matrix.config.name }}
+        working-directory: /tmp/test-output/test-${{ matrix.variant.name }}
         run: |
           uv run pytest -v --tb=short
 
       - name: Verify test count
-        working-directory: /tmp/test-output/test-${{ matrix.config.name }}
+        working-directory: /tmp/test-output/test-${{ matrix.variant.name }}
         run: |
           TEST_COUNT=$(uv run pytest --collect-only -q 2>/dev/null | grep -c "test_" || echo "0")
-          echo "Expected: ${{ matrix.config.expected_tests }} tests"
+          echo "Expected: ${{ matrix.variant.expected_tests }} tests"
           echo "Found: $TEST_COUNT tests"
-          if [ "$TEST_COUNT" -ne "${{ matrix.config.expected_tests }}" ]; then
+          if [ "$TEST_COUNT" -ne "${{ matrix.variant.expected_tests }}" ]; then
             echo "❌ Test count mismatch!"
             exit 1
           fi
           echo "✅ Test count matches expected"
 
       - name: Run linting checks
-        working-directory: /tmp/test-output/test-${{ matrix.config.name }}
+        working-directory: /tmp/test-output/test-${{ matrix.variant.name }}
         run: |
           uv run ruff check . --fix || true
           uv run ruff check .
 
       - name: Check for hardcoded template values
-        working-directory: /tmp/test-output/test-${{ matrix.config.name }}
+        working-directory: /tmp/test-output/test-${{ matrix.variant.name }}
         run: |
           echo "Checking for hardcoded 'fastmcp-template' references..."
           if grep -r "fastmcp-template" --exclude-dir=.git --exclude-dir=.venv --exclude-dir=.ruff_cache --exclude="*.pyc" .; then
@@ -107,4 +118,4 @@ jobs:
             echo "❌ Template testing failed"
             exit 1
           fi
-          echo "✅ All template configurations tested successfully!"
+          echo "✅ All template variants tested successfully!"

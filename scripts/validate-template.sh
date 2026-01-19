@@ -6,9 +6,10 @@
 # Used for local development and CI validation.
 #
 # Usage:
-#   ./scripts/validate-template.sh minimal       # Test minimal configuration
-#   ./scripts/validate-template.sh full          # Test full configuration
-#   ./scripts/validate-template.sh --all         # Test all configurations
+#   ./scripts/validate-template.sh minimal       # Test minimal variant
+#   ./scripts/validate-template.sh standard      # Test standard variant
+#   ./scripts/validate-template.sh full          # Test full variant
+#   ./scripts/validate-template.sh --all         # Test all variants
 #   ./scripts/validate-template.sh --help        # Show help
 
 set -e
@@ -20,12 +21,13 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Configuration map
-declare -A CONFIGS=(
-    ["minimal"]="no:no:75"
-    ["full"]="yes:yes:101"
-    ["demos-only"]="yes:no:86"
-    ["secrets-only"]="no:yes:85"
+# Variant configuration: variant_name -> expected_tests
+declare -A VARIANTS=(
+    ["minimal"]="60"
+    ["standard"]="75"
+    ["full"]="101"
+    ["custom-demos-only"]="85"
+    ["custom-secrets-only"]="76"
 )
 
 # Print colored message
@@ -41,16 +43,17 @@ show_help() {
 FastMCP Template Validation Script
 
 Usage:
-  ./scripts/validate-template.sh <config>
+  ./scripts/validate-template.sh <variant>
   ./scripts/validate-template.sh --all
   ./scripts/validate-template.sh --help
 
-Configurations:
-  minimal       - No demo tools, no secret tools (74 tests)
-  full          - All demo and secret tools (101 tests)
-  demos-only    - Demo tools only (86 tests)
-  secrets-only  - Secret tools only (85 tests)
-  --all         - Test all configurations
+Variants:
+  minimal               - No demo tools, no secrets, no Langfuse (60 tests)
+  standard              - No demo tools, no secrets, with Langfuse (75 tests)
+  full                  - All demo and secret tools, with Langfuse (101 tests)
+  custom-demos-only     - Demo tools only, with Langfuse (85 tests)
+  custom-secrets-only   - Secret tools only, no Langfuse (76 tests)
+  --all                 - Test all variants
 
 Examples:
   ./scripts/validate-template.sh minimal
@@ -59,41 +62,66 @@ Examples:
 HELP
 }
 
-# Validate single configuration
-validate_config() {
-    local config_name=$1
-    local config_value=${CONFIGS[$config_name]}
+# Validate single variant
+validate_variant() {
+    local variant_name=$1
+    local expected_tests=${VARIANTS[$variant_name]}
 
-    if [[ -z "$config_value" ]]; then
-        print_msg "$RED" "❌ Unknown configuration: $config_name"
+    if [[ -z "$expected_tests" ]]; then
+        print_msg "$RED" "❌ Unknown variant: $variant_name"
         return 1
     fi
 
-    IFS=':' read -r demo_tools secret_tools expected_tests <<<"$config_value"
-
     print_msg "$BLUE" "\n=========================================="
-    print_msg "$BLUE" "Testing: $config_name"
-    print_msg "$BLUE" "  Demo tools: $demo_tools"
-    print_msg "$BLUE" "  Secret tools: $secret_tools"
+    print_msg "$BLUE" "Testing: $variant_name variant"
     print_msg "$BLUE" "  Expected tests: $expected_tests"
     print_msg "$BLUE" "==========================================\n"
 
     local output_dir="/tmp/fastmcp-template-test"
-    local project_dir="$output_dir/test-$config_name"
+    local project_dir="$output_dir/test-$variant_name"
 
     # Clean up previous test
     rm -rf "$project_dir"
 
     # Generate project
-    print_msg "$YELLOW" "→ Generating project..."
-    if ! uv run cookiecutter . --output-dir "$output_dir" --no-input \
-        project_name="Test $config_name" \
-        project_slug="test-$config_name" \
-        include_demo_tools="$demo_tools" \
-        include_secret_tools="$secret_tools" >/dev/null 2>&1; then
-        print_msg "$RED" "❌ Failed to generate project"
-        return 1
-    fi
+    print_msg "$YELLOW" "→ Generating project with $variant_name variant..."
+
+    # Handle custom variants with specific options
+    case "$variant_name" in
+    custom-demos-only)
+        if ! uv run cookiecutter . --output-dir "$output_dir" --no-input \
+            project_name="Test $variant_name" \
+            project_slug="test-$variant_name" \
+            template_variant="custom" \
+            include_demo_tools="yes" \
+            include_secret_tools="no" \
+            include_langfuse="yes" >/dev/null 2>&1; then
+            print_msg "$RED" "❌ Failed to generate project"
+            return 1
+        fi
+        ;;
+    custom-secrets-only)
+        if ! uv run cookiecutter . --output-dir "$output_dir" --no-input \
+            project_name="Test $variant_name" \
+            project_slug="test-$variant_name" \
+            template_variant="custom" \
+            include_demo_tools="no" \
+            include_secret_tools="yes" \
+            include_langfuse="no" >/dev/null 2>&1; then
+            print_msg "$RED" "❌ Failed to generate project"
+            return 1
+        fi
+        ;;
+    *)
+        if ! uv run cookiecutter . --output-dir "$output_dir" --no-input \
+            project_name="Test $variant_name" \
+            project_slug="test-$variant_name" \
+            template_variant="$variant_name" >/dev/null 2>&1; then
+            print_msg "$RED" "❌ Failed to generate project"
+            return 1
+        fi
+        ;;
+    esac
     print_msg "$GREEN" "✓ Project generated"
 
     # Run tests
@@ -133,7 +161,7 @@ validate_config() {
     fi
     print_msg "$GREEN" "✓ No hardcoded template values"
 
-    print_msg "$GREEN" "\n✅ Configuration '$config_name' validated successfully!\n"
+    print_msg "$GREEN" "\n✅ Variant '$variant_name' validated successfully!\n"
     return 0
 }
 
@@ -145,23 +173,23 @@ main() {
     fi
 
     if [[ "$1" == "--all" ]]; then
-        print_msg "$BLUE" "Testing all configurations..."
+        print_msg "$BLUE" "Testing all variants..."
         local failed=0
-        for config in minimal full demos-only secrets-only; do
-            if ! validate_config "$config"; then
+        for variant in minimal standard full custom-demos-only custom-secrets-only; do
+            if ! validate_variant "$variant"; then
                 failed=$((failed + 1))
             fi
         done
 
         if [[ $failed -eq 0 ]]; then
-            print_msg "$GREEN" "\n🎉 All configurations validated successfully!"
+            print_msg "$GREEN" "\n🎉 All variants validated successfully!"
             exit 0
         else
-            print_msg "$RED" "\n❌ $failed configuration(s) failed"
+            print_msg "$RED" "\n❌ $failed variant(s) failed"
             exit 1
         fi
     else
-        validate_config "$1"
+        validate_variant "$1"
     fi
 }
 

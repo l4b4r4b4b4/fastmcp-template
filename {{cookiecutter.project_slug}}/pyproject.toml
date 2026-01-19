@@ -1,3 +1,6 @@
+{%- set use_demo_tools = (cookiecutter.template_variant == 'full') or (cookiecutter.template_variant == 'custom' and cookiecutter.include_demo_tools == 'yes') -%}
+{%- set use_secret_tools = (cookiecutter.template_variant == 'full') or (cookiecutter.template_variant == 'custom' and cookiecutter.include_secret_tools == 'yes') -%}
+{%- set use_langfuse = (cookiecutter.template_variant in ['standard', 'full']) or (cookiecutter.template_variant == 'custom' and cookiecutter.include_langfuse == 'yes') -%}
 [project]
 name = "{{ cookiecutter.project_slug }}"
 version = "0.0.0"
@@ -14,7 +17,7 @@ authors = [
 requires-python = ">={{ cookiecutter.python_version }}"
 dependencies = [
     "fastmcp{{ cookiecutter.fastmcp_version }}",
-{% if cookiecutter.include_langfuse == "yes" %}
+{% if use_langfuse %}
     "langfuse{{ cookiecutter.langfuse_version }}",
 {% endif %}
     "mcp-refcache{{ cookiecutter.mcp_refcache_version }}",

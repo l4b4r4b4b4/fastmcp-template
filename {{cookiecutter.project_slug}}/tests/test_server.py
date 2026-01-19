@@ -1,3 +1,6 @@
+{%- set use_demo_tools = (cookiecutter.template_variant == 'full') or (cookiecutter.template_variant == 'custom' and cookiecutter.include_demo_tools == 'yes') -%}
+{%- set use_secret_tools = (cookiecutter.template_variant == 'full') or (cookiecutter.template_variant == 'custom' and cookiecutter.include_secret_tools == 'yes') -%}
+{%- set use_langfuse = (cookiecutter.template_variant in ['standard', 'full']) or (cookiecutter.template_variant == 'custom' and cookiecutter.include_langfuse == 'yes') -%}
 """Tests for the {{ cookiecutter.project_name }} server module."""
 
 from __future__ import annotations
@@ -7,6 +10,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from app.server import cache, mcp
+{% if use_langfuse %}
 from app.tracing import (
     MockContext,
     enable_test_mode,
@@ -14,6 +18,7 @@ from app.tracing import (
     is_langfuse_enabled,
     is_test_mode_enabled,
 )
+{% endif %}
 
 
 class TestServerInitialization:
@@ -30,7 +35,7 @@ class TestServerInitialization:
         assert cache.name == "{{ cookiecutter.project_slug }}"
 
 
-{% if cookiecutter.include_demo_tools == "yes" %}
+{% if use_demo_tools %}
 class TestHelloTool:
     """Tests for the hello tool."""
 
@@ -56,6 +61,7 @@ class TestHelloTool:
 {% endif %}
 
 
+{% if use_langfuse %}
 class TestTracingModule:
     """Tests for the tracing module."""
 
@@ -136,8 +142,10 @@ class TestTracingModule:
         attrs = get_langfuse_attributes(operation="cache_set")
         assert attrs["metadata"]["operation"] == "cache_set"
         assert "cacheset" in attrs["tags"]
+{% endif %}
 
 
+{% if use_langfuse %}
 class TestContextManagementTools:
     """Tests for context management tools."""
 
@@ -230,6 +238,7 @@ class TestContextManagementTools:
         assert "secret_key_set" in result
         assert "test_mode_enabled" in result
         assert "langfuse_attributes" in result
+{% endif %}
 
 
 class TestHealthCheck:
@@ -278,14 +287,14 @@ class TestMCPConfiguration:
         """Test that instructions mention caching."""
         assert "cach" in mcp.instructions.lower()
 
-{% if cookiecutter.include_secret_tools == "yes" %}
+{% if use_secret_tools %}
     def test_instructions_mention_secret(self) -> None:
         """Test that instructions mention secret computation."""
         assert "secret" in mcp.instructions.lower()
 {% endif %}
 
 
-{% if cookiecutter.include_demo_tools == "yes" %}
+{% if use_demo_tools %}
 class TestGenerateItems:
     """Tests for the generate_items tool."""
 
@@ -361,7 +370,7 @@ class TestGenerateItems:
 {% endif %}
 
 
-{% if cookiecutter.include_secret_tools == "yes" %}
+{% if use_secret_tools %}
 class TestStoreSecret:
     """Tests for the store_secret tool."""
 
@@ -503,7 +512,7 @@ class TestGetCachedResult:
         yield
         cache.clear()
 
-{% if cookiecutter.include_secret_tools == "yes" %}
+{% if use_secret_tools %}
     def _call_store_secret(self, name: str, value: float) -> dict:
         """Helper to store a value in cache."""
         from app import server
@@ -537,7 +546,7 @@ class TestGetCachedResult:
         assert "error" in result
         assert result["ref_id"] == "nonexistent:ref"
 
-{% if cookiecutter.include_secret_tools == "yes" %}
+{% if use_secret_tools %}
     @pytest.mark.asyncio
     async def test_get_cached_result_with_valid_ref(self) -> None:
         """Test getting a cached result with valid reference."""
@@ -633,7 +642,7 @@ class TestTyperCLI:
 class TestPydanticModels:
     """Tests for Pydantic input models."""
 
-{% if cookiecutter.include_demo_tools == "yes" %}
+{% if use_demo_tools %}
     def test_item_generation_input_defaults(self) -> None:
         """Test ItemGenerationInput default values."""
         from app.tools.demo import ItemGenerationInput
@@ -663,7 +672,7 @@ class TestPydanticModels:
             ItemGenerationInput(count=20000)  # Above maximum
 {% endif %}
 
-{% if cookiecutter.include_secret_tools == "yes" %}
+{% if use_secret_tools %}
     def test_secret_input(self) -> None:
         """Test SecretInput model."""
         from app.tools.secrets import SecretInput
@@ -734,7 +743,7 @@ class TestTemplateGuidePrompt:
         assert isinstance(result, str)
         assert len(result) > 0
 
-{% if cookiecutter.include_demo_tools == "yes" %}
+{% if use_demo_tools %}
     def test_template_guide_mentions_hello(self) -> None:
         """Test that guide mentions hello tool."""
         result = self._call_template_guide()
@@ -751,7 +760,7 @@ class TestTemplateGuidePrompt:
         result = self._call_template_guide()
         assert "paginate" in result.lower() or "page" in result.lower()
 
-{% if cookiecutter.include_secret_tools == "yes" %}
+{% if use_secret_tools %}
     def test_template_guide_mentions_secret(self) -> None:
         """Test that guide mentions secret computation."""
         result = self._call_template_guide()

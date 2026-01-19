@@ -1,3 +1,6 @@
+{%- set use_demo_tools = (cookiecutter.template_variant == 'full') or (cookiecutter.template_variant == 'custom' and cookiecutter.include_demo_tools == 'yes') -%}
+{%- set use_secret_tools = (cookiecutter.template_variant == 'full') or (cookiecutter.template_variant == 'custom' and cookiecutter.include_secret_tools == 'yes') -%}
+{%- set use_langfuse = (cookiecutter.template_variant in ['standard', 'full']) or (cookiecutter.template_variant == 'custom' and cookiecutter.include_langfuse == 'yes') -%}
 # {{ cookiecutter.project_name }}
 
 [![CI](https://github.com/{{ cookiecutter.github_username }}/{{ cookiecutter.project_slug }}/actions/workflows/ci.yml/badge.svg)](https://github.com/{{ cookiecutter.github_username }}/{{ cookiecutter.project_slug }}/actions/workflows/ci.yml)
@@ -23,7 +26,7 @@ Built with [FastMCP](https://github.com/jlowin/fastmcp) and [mcp-refcache](https
 - ✅ **Private Computation** - Let agents compute with values they cannot see
 - ✅ **Docker Ready** - Production-ready containers with Python slim base image
 - ✅ **GitHub Actions** - CI/CD with PyPI publishing and GHCR containers
-{% if cookiecutter.include_langfuse == "yes" %}
+{% if use_langfuse %}
 - ✅ **Langfuse Tracing** - Built-in observability integration
 {% endif %}
 - ✅ **Type-Safe** - Full type hints with Pydantic models
@@ -100,7 +103,7 @@ Add to your `claude_desktop_config.json`:
 
 The project includes `.zed/settings.json` pre-configured for MCP context servers.
 
-{% if cookiecutter.include_demo_tools == "yes" %}
+{% if use_demo_tools %}
 ## Example Tools
 
 The project includes several example tools demonstrating different patterns:
@@ -228,7 +231,7 @@ nix develop  # Enter dev shell with all tools
 ```
 
 ## Configuration
-{% if cookiecutter.include_langfuse == "yes" %}
+{% if use_langfuse %}
 
 ### Environment Variables
 
