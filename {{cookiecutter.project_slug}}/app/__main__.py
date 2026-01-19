@@ -1,9 +1,9 @@
-"""CLI entry point for FastMCP Template Server.
+"""CLI entry point for {{ cookiecutter.project_name }}.
 
 Usage:
-    uvx fastmcp-template stdio           # Local CLI mode (Claude Desktop)
-    uvx fastmcp-template sse             # SSE server mode (deprecated)
-    uvx fastmcp-template streamable-http # Streamable HTTP (recommended for remote)
+    uvx {{ cookiecutter.project_slug }} stdio           # Local CLI mode (Claude Desktop)
+    uvx {{ cookiecutter.project_slug }} sse             # SSE server mode (deprecated)
+    uvx {{ cookiecutter.project_slug }} streamable-http # Streamable HTTP (recommended for remote)
 
 Environment Variables:
     FASTMCP_PORT: Server port for HTTP modes (default: 8000)
@@ -20,8 +20,8 @@ import sys
 import typer
 
 app = typer.Typer(
-    name="fastmcp-template",
-    help="FastMCP Template Server with RefCache and Langfuse Tracing",
+    name="{{ cookiecutter.project_slug }}",
+    help="{{ cookiecutter.project_description }}",
     add_completion=False,
 )
 
@@ -161,15 +161,14 @@ def main(
         False, "--version", "-v", help="Show version and exit"
     ),
 ) -> None:
-    """FastMCP Template Server with RefCache and Langfuse Tracing.
+    """{{ cookiecutter.project_name }}.
 
-    A production-ready MCP server template demonstrating best practices
-    for building Model Context Protocol servers with caching and observability.
+    {{ cookiecutter.project_description }}
     """
     if version:
         from . import __version__
 
-        typer.echo(f"fastmcp-template {__version__}")
+        typer.echo(f"{{ cookiecutter.project_slug }} {__version__}")
         raise typer.Exit()
 
     # If no command provided, show help

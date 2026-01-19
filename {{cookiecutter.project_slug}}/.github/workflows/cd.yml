@@ -1,4 +1,4 @@
-# CD Pipeline for FastMCP Template
+# CD Pipeline for {{ cookiecutter.project_name }}
 #
 # Deployment workflow placeholder - customize for your infrastructure.
 #
@@ -67,7 +67,7 @@ concurrency:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: {%  raw %}${{ github.repository_owner }}{% endraw %}/fastmcp-template
+  IMAGE_NAME: {%  raw %}${{ github.repository_owner }}{% endraw %}/{{ cookiecutter.project_slug }}
 
 jobs:
   # Gate: Only proceed if Release workflow passed
@@ -120,7 +120,7 @@ jobs:
   #         username: {%  raw %}${{ secrets.DEPLOY_USER }}{% endraw %}
   #         key: {%  raw %}${{ secrets.DEPLOY_SSH_KEY }}{% endraw %}
   #         script: |
-  #           cd /opt/fastmcp-template
+  #           cd /opt/{{ cookiecutter.project_slug }}
   #           docker compose pull
   #           docker compose up -d
   #
@@ -140,10 +140,10 @@ jobs:
   #         echo "{%  raw %}${{ secrets.KUBECONFIG }}{% endraw %}" | base64 -d > ~/.kube/config
   #     - name: Deploy
   #       run: |
-  #         kubectl set image deployment/fastmcp-template \
-  #           fastmcp-template={%  raw %}${{ env.REGISTRY }}{% endraw %}/{%  raw %}${{ env.IMAGE_NAME }}{% endraw %}:{%  raw %}${{ needs.check-release.outputs.image_tag }}{% endraw %} \
-  #           -n fastmcp
-  #         kubectl rollout status deployment/fastmcp-template -n fastmcp
+  #         kubectl set image deployment/{{ cookiecutter.project_slug }} \
+  #           {{ cookiecutter.project_slug }}={%  raw %}${{ env.REGISTRY }}{% endraw %}/{%  raw %}${{ env.IMAGE_NAME }}{% endraw %}:{%  raw %}${{ needs.check-release.outputs.image_tag }}{% endraw %} \
+  #           -n {{ cookiecutter.project_slug }}
+  #         kubectl rollout status deployment/{{ cookiecutter.project_slug }} -n {{ cookiecutter.project_slug }}
   #
   # Option 3: Fly.io
   # ----------------

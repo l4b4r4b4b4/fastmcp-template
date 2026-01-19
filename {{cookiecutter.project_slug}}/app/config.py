@@ -1,4 +1,4 @@
-"""Configuration module for FastMCP Template Server.
+"""Configuration module for {{ cookiecutter.project_name }}.
 
 Uses pydantic-settings for environment-based configuration with validation.
 
@@ -32,7 +32,7 @@ def _get_default_sqlite_path() -> str:
     else:
         base_dir = Path.home() / ".local" / "share"
 
-    return str(base_dir / "fastmcp-template" / "cache.db")
+    return str(base_dir / "{{ cookiecutter.project_slug }}" / "cache.db")
 
 
 class Settings(BaseSettings):

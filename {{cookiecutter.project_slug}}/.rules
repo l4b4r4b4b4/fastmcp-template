@@ -284,7 +284,14 @@ UV is 10-100x faster, reproducible, follows PEP 621, single source of truth.
 - Terminal ONLY for: tests, linters, builds, package management, git, system checks
 
 ### Hard Rules: Code Quality
-- **Run `ruff check . --fix && ruff format .`** before committing
+- **Run `ruff check . --fix --unsafe-fixes && ruff format .`** before committing
+  - `--unsafe-fixes` is safe here because tests catch behavioral changes
+  - Ruff's "unsafe" label is conservative - common safe fixes include:
+    - **RUF022**: `__all__` sorting (semantically harmless)
+    - **UP036**: Remove version checks (we require Python 3.12+)
+    - **F841**: Remove unused variables (tests catch side effects)
+    - **TCH001-003**: Move imports to `TYPE_CHECKING` (standard imports have no side effects)
+    - **B006**: Mutable default args → `None` (preserves behavior)
 - **Tests must pass** with `pytest`
 - **Maintain ≥73% coverage**
 - **No skipping approval** even for "small" changes

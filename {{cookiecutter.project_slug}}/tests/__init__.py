@@ -1,1 +1,1 @@
-"""Tests for fastmcp-template MCP server."""
+"""Tests for {{ cookiecutter.project_slug }} MCP server."""

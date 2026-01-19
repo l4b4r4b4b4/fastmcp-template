@@ -1,0 +1,121 @@
+name: Test Template
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test-template-generation:
+    name: Test ${{ matrix.variant.name }} variant
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        variant:
+          - name: minimal
+            expected_tests: 60
+          - name: standard
+            expected_tests: 75
+          - name: full
+            expected_tests: 101
+          - name: custom-demos-only
+            template_variant: custom
+            include_demo_tools: yes
+            include_secret_tools: no
+            include_langfuse: yes
+            expected_tests: 85
+          - name: custom-secrets-only
+            template_variant: custom
+            include_demo_tools: no
+            include_secret_tools: yes
+            include_langfuse: no
+            expected_tests: 76
+
+    steps:
+      - name: Checkout template repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install cookiecutter
+        run: uv tool install cookiecutter
+
+      - name: Generate project from template
+        run: |
+          if [ "${{ matrix.variant.template_variant }}" == "custom" ]; then
+            uv tool run cookiecutter . --output-dir /tmp/test-output --no-input \
+              project_name="Test ${{ matrix.variant.name }}" \
+              project_slug="test-${{ matrix.variant.name }}" \
+              template_variant="${{ matrix.variant.template_variant }}" \
+              include_demo_tools="${{ matrix.variant.include_demo_tools }}" \
+              include_secret_tools="${{ matrix.variant.include_secret_tools }}" \
+              include_langfuse="${{ matrix.variant.include_langfuse }}"
+          else
+            uv tool run cookiecutter . --output-dir /tmp/test-output --no-input \
+              project_name="Test ${{ matrix.variant.name }}" \
+              project_slug="test-${{ matrix.variant.name }}" \
+              template_variant="${{ matrix.variant.name }}"
+          fi
+
+      - name: List generated files
+        run: |
+          echo "Generated project structure:"
+          ls -la /tmp/test-output/test-${{ matrix.variant.name }}/
+
+      - name: Run tests in generated project
+        working-directory: /tmp/test-output/test-${{ matrix.variant.name }}
+        run: |
+          uv run pytest -v --tb=short
+
+      - name: Verify test count
+        working-directory: /tmp/test-output/test-${{ matrix.variant.name }}
+        run: |
+          TEST_COUNT=$(uv run pytest --collect-only -q 2>/dev/null | grep -c "test_" || echo "0")
+          echo "Expected: ${{ matrix.variant.expected_tests }} tests"
+          echo "Found: $TEST_COUNT tests"
+          if [ "$TEST_COUNT" -ne "${{ matrix.variant.expected_tests }}" ]; then
+            echo "❌ Test count mismatch!"
+            exit 1
+          fi
+          echo "✅ Test count matches expected"
+
+      - name: Run linting checks
+        working-directory: /tmp/test-output/test-${{ matrix.variant.name }}
+        run: |
+          uv run ruff check . --fix || true
+          uv run ruff check .
+
+      - name: Check for hardcoded template values
+        working-directory: /tmp/test-output/test-${{ matrix.variant.name }}
+        run: |
+          echo "Checking for hardcoded 'fastmcp-template' references..."
+          if grep -r "fastmcp-template" --exclude-dir=.git --exclude-dir=.venv --exclude-dir=.ruff_cache --exclude="*.pyc" .; then
+            echo "❌ Found hardcoded 'fastmcp-template' references!"
+            exit 1
+          fi
+          echo "✅ No hardcoded template values found"
+
+  summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: test-template-generation
+    if: always()
+    steps:
+      - name: Check results
+        run: |
+          if [ "${{ needs.test-template-generation.result }}" != "success" ]; then
+            echo "❌ Template testing failed"
+            exit 1
+          fi
+          echo "✅ All template variants tested successfully!"

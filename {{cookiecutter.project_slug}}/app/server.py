@@ -1,4 +1,7 @@
-"""{{ cookiecutter.project_name }} - FastMCP Server with RefCache{% if cookiecutter.include_langfuse == "yes" %} and Langfuse Tracing{% endif %}.
+{%- set use_demo_tools = (cookiecutter.template_variant == 'full') or (cookiecutter.template_variant == 'custom' and cookiecutter.include_demo_tools == 'yes') -%}
+{%- set use_secret_tools = (cookiecutter.template_variant == 'full') or (cookiecutter.template_variant == 'custom' and cookiecutter.include_secret_tools == 'yes') -%}
+{%- set use_langfuse = (cookiecutter.template_variant in ['standard', 'full']) or (cookiecutter.template_variant == 'custom' and cookiecutter.include_langfuse == 'yes') -%}
+"""{{ cookiecutter.project_name }} - FastMCP Server with RefCache{% if use_langfuse %} and Langfuse Tracing{% endif %}.
 
 This module creates and configures the FastMCP server, wiring together
 tools from the modular tools package.
@@ -9,7 +12,7 @@ Features:
 - Pagination for accessing large datasets
 - Access control (user vs agent permissions)
 - Private computation (EXECUTE without READ)
-{% if cookiecutter.include_langfuse == "yes" %}
+{% if use_langfuse %}
 - Langfuse tracing integration for observability
 {% endif %}
 
@@ -32,22 +35,24 @@ from mcp_refcache.fastmcp import cache_instructions, register_admin_tools
 
 from app.prompts import langfuse_guide, template_guide
 from app.tools import (
-    create_compute_with_secret,
     create_get_cached_result,
     create_health_check,
+{% if use_secret_tools %}
+    create_compute_with_secret,
     create_store_secret,
-{% if cookiecutter.include_langfuse == "yes" %}
+{% endif %}
+{% if use_langfuse %}
     enable_test_context,
     get_trace_info,
     reset_test_context,
     set_test_context,
 {% endif %}
-{% if cookiecutter.include_demo_tools == "yes" %}
+{% if use_demo_tools %}
     generate_items,
     hello,
 {% endif %}
 )
-{% if cookiecutter.include_langfuse == "yes" %}
+{% if use_langfuse %}
 from app.tracing import TracedRefCache
 {% endif %}
 
@@ -59,7 +64,7 @@ mcp = FastMCP(
     name="{{ cookiecutter.project_name }}",
     instructions=f"""{{ cookiecutter.project_description }}
 
-{% if cookiecutter.include_langfuse == "yes" %}
+{% if use_langfuse %}
 All tool calls are traced to Langfuse with:
 - User ID and Session ID from context (for filtering/aggregation)
 - Full context metadata (org_id, agent_id, cache_namespace)
@@ -69,14 +74,16 @@ Enable test mode with enable_test_context() to simulate different users.
 
 {% endif %}
 Available tools:
-{% if cookiecutter.include_demo_tools == "yes" %}
+{% if use_demo_tools %}
 - hello: Simple greeting tool (no caching)
 - generate_items: Generate a list of items (cached in public namespace)
 {% endif %}
+{% if use_secret_tools %}
 - store_secret: Store a secret value for private computation
 - compute_with_secret: Use a secret in computation without revealing it
+{% endif %}
 - get_cached_result: Retrieve or paginate through cached results
-{% if cookiecutter.include_langfuse == "yes" %}
+{% if use_langfuse %}
 - enable_test_context: Enable/disable test context for Langfuse demos
 - set_test_context: Set test context values for user attribution
 - reset_test_context: Reset test context to defaults
@@ -88,7 +95,7 @@ Available tools:
 )
 
 # =============================================================================
-# Initialize RefCache{% if cookiecutter.include_langfuse == "yes" %} with Langfuse Tracing{% endif %}
+# Initialize RefCache{% if use_langfuse %} with Langfuse Tracing{% endif %}
 
 # =============================================================================
 
@@ -102,7 +109,7 @@ _cache = RefCache(
     ),
 )
 
-{% if cookiecutter.include_langfuse == "yes" %}
+{% if use_langfuse %}
 # Wrap with TracedRefCache for Langfuse observability
 cache = TracedRefCache(_cache)
 {% else %}
@@ -116,8 +123,10 @@ cache = _cache
 
 # These are created with factory functions and bound to the cache instance.
 # We keep references for testing and re-export them as module attributes.
+{% if use_secret_tools %}
 store_secret = create_store_secret(cache)
 compute_with_secret = create_compute_with_secret(cache)
+{% endif %}
 get_cached_result = create_get_cached_result(cache)
 health_check = create_health_check(_cache)
 
@@ -125,7 +134,7 @@ health_check = create_health_check(_cache)
 # Register Tools
 # =============================================================================
 
-{% if cookiecutter.include_demo_tools == "yes" %}
+{% if use_demo_tools %}
 # Demo tools
 mcp.tool(hello)
 
@@ -140,7 +149,7 @@ async def _generate_items(
 
     Demonstrates caching of large results in the PUBLIC namespace.
     For large counts, returns a reference with a preview instead of the full data.
-{% if cookiecutter.include_langfuse == "yes" %}
+{% if use_langfuse %}
     All operations are traced to Langfuse with user/session attribution.
 {% endif %}
 
@@ -165,7 +174,7 @@ async def _generate_items(
 
 
 {% endif %}
-{% if cookiecutter.include_langfuse == "yes" %}
+{% if use_langfuse %}
 # Context management tools
 mcp.tool(enable_test_context)
 mcp.tool(set_test_context)
@@ -174,8 +183,10 @@ mcp.tool(get_trace_info)
 
 {% endif %}
 # Cache-bound tools (using pre-created module-level functions)
+{% if use_secret_tools %}
 mcp.tool(store_secret)
 mcp.tool(compute_with_secret)
+{% endif %}
 mcp.tool(get_cached_result)
 mcp.tool(health_check)
 
@@ -212,7 +223,7 @@ def _template_guide() -> str:
     """Guide for using this MCP server template."""
     return template_guide()
 
-{% if cookiecutter.include_langfuse == "yes" %}
+{% if use_langfuse %}
 
 @mcp.prompt
 def _langfuse_guide() -> str:

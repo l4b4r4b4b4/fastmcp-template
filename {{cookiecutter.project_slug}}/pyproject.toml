@@ -1,15 +1,23 @@
+{%- set use_demo_tools = (cookiecutter.template_variant == 'full') or (cookiecutter.template_variant == 'custom' and cookiecutter.include_demo_tools == 'yes') -%}
+{%- set use_secret_tools = (cookiecutter.template_variant == 'full') or (cookiecutter.template_variant == 'custom' and cookiecutter.include_secret_tools == 'yes') -%}
+{%- set use_langfuse = (cookiecutter.template_variant in ['standard', 'full']) or (cookiecutter.template_variant == 'custom' and cookiecutter.include_langfuse == 'yes') -%}
 [project]
 name = "{{ cookiecutter.project_slug }}"
 version = "0.0.0"
 description = "{{ cookiecutter.project_description }}"
 readme = "README.md"
+{% if cookiecutter.license == "MIT" %}license = "MIT"{% endif %}
+{% if cookiecutter.license == "Apache-2.0" %}license = "Apache-2.0"{% endif %}
+{% if cookiecutter.license == "GPL-3.0" %}license = "GPL-3.0-only"{% endif %}
+{% if cookiecutter.license == "BSD-3-Clause" %}license = "BSD-3-Clause"{% endif %}
+{% if cookiecutter.license == "Proprietary" %}license = "LicenseRef-Proprietary"{% endif %}
 authors = [
     { name = "{{ cookiecutter.author_name }}", email = "{{ cookiecutter.author_email }}" }
 ]
 requires-python = ">={{ cookiecutter.python_version }}"
 dependencies = [
     "fastmcp{{ cookiecutter.fastmcp_version }}",
-{% if cookiecutter.include_langfuse == "yes" %}
+{% if use_langfuse %}
     "langfuse{{ cookiecutter.langfuse_version }}",
 {% endif %}
     "mcp-refcache{{ cookiecutter.mcp_refcache_version }}",

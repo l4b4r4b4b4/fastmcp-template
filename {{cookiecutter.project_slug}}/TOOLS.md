@@ -32,14 +32,14 @@ A simple greeting tool that demonstrates basic MCP tool patterns.
 ```json
 {
   "message": "Hello, World!",
-  "server": "fastmcp-template"
+  "server": "{{ cookiecutter.project_slug }}"
 }
 ```
 
 **Example:**
 ```
 hello("Alice")
-→ {"message": "Hello, Alice!", "server": "fastmcp-template"}
+→ {"message": "Hello, Alice!", "server": "{{ cookiecutter.project_slug }}"}
 ```
 
 ---
@@ -187,8 +187,8 @@ Check server health status and configuration.
 ```json
 {
   "status": "healthy",
-  "server": "fastmcp-template",
-  "cache": "fastmcp-template",
+  "server": "{{ cookiecutter.project_slug }}",
+  "cache": "{{ cookiecutter.project_slug }}",
   "langfuse_enabled": true,
   "test_mode": false
 }

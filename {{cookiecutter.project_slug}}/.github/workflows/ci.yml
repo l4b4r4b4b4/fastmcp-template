@@ -1,4 +1,4 @@
-# CI Pipeline for FastMCP Template
+# CI Pipeline for {{ cookiecutter.project_name }}
 #
 # Workflow Design:
 # - Triggers on PRs to main (required checks before merge)

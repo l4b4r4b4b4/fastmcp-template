@@ -32,13 +32,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Python support**: Drop Python 3.14 from CI matrix (3.12 and 3.13 only)
 - **Docker**: Add `PYTHON_VERSION` build arg (default: 3.12)
-- **Zed settings**: Use `uvx fastmcp-template stdio` (PyPI install)
+- **Zed settings**: Use `uvx {{ cookiecutter.project_slug }} stdio` (PyPI install)
 
 ## [0.0.1] - 2024-12-14
 
 ### Added
 
-- Initial release of FastMCP Template
+- Initial release of {{ cookiecutter.project_name }}
 - Core server implementation with mcp-refcache integration
 - Example tools demonstrating caching patterns:
   - `hello` - Simple greeting tool (no caching)
@@ -66,7 +66,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Contributing guidelines
   - Project rules for AI coding assistants
 
-[Unreleased]: https://github.com/l4b4r4b4b4/fastmcp-template/compare/v0.0.3...HEAD
-[0.0.3]: https://github.com/l4b4r4b4b4/fastmcp-template/releases/tag/v0.0.3
-[0.0.2]: https://github.com/l4b4r4b4b4/fastmcp-template/releases/tag/v0.0.2
-[0.0.1]: https://github.com/l4b4r4b4b4/fastmcp-template/releases/tag/v0.0.1
+[Unreleased]: https://github.com/{{ cookiecutter.github_username }}/{{ cookiecutter.project_slug }}/compare/v0.0.3...HEAD
+[0.0.3]: https://github.com/{{ cookiecutter.github_username }}/{{ cookiecutter.project_slug }}/releases/tag/v0.0.3
+[0.0.2]: https://github.com/{{ cookiecutter.github_username }}/{{ cookiecutter.project_slug }}/releases/tag/v0.0.2
+[0.0.1]: https://github.com/{{ cookiecutter.github_username }}/{{ cookiecutter.project_slug }}/releases/tag/v0.0.1

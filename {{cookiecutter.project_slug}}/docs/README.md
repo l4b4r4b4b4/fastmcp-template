@@ -1,6 +1,6 @@
-# FastMCP Template Documentation
+# {{ cookiecutter.project_name }} Documentation
 
-This directory contains extended documentation for the FastMCP Template project.
+This directory contains extended documentation for the {{ cookiecutter.project_name }} project.
 
 ## Architecture Overview
 
@@ -218,10 +218,10 @@ def traced_tool(arg: str) -> dict:
 
 ```bash
 # Run with stdio (default, for Claude Desktop)
-uv run fastmcp-template
+uv run {{ cookiecutter.project_slug }}
 
 # Run with SSE (for web clients)
-uv run fastmcp-template --transport sse --port 8000 --host 0.0.0.0
+uv run {{ cookiecutter.project_slug }} --transport sse --port 8000 --host 0.0.0.0
 ```
 
 ## Docker Deployment
@@ -233,8 +233,8 @@ The project provides three Docker configurations:
 | Image | Base | Use Case |
 |-------|------|----------|
 | `fastmcp-base` | Chainguard Python | Secure base for all FastMCP servers |
-| `fastmcp-template` | fastmcp-base | This template application |
-| `fastmcp-template:dev` | python:3.12-slim | Development with hot reload |
+| `{{ cookiecutter.project_slug }}` | fastmcp-base | This template application |
+| `{{ cookiecutter.project_slug }}:dev` | python:3.12-slim | Development with hot reload |
 
 ### Why Chainguard?
 
@@ -252,26 +252,26 @@ The project provides three Docker configurations:
 docker build -f docker/Dockerfile.base -t fastmcp-base:latest .
 
 # Build app image
-docker build -f docker/Dockerfile -t fastmcp-template:latest .
+docker build -f docker/Dockerfile -t {{ cookiecutter.project_slug }}:latest .
 
 # Build dev image
-docker build -f docker/Dockerfile.dev -t fastmcp-template:dev .
+docker build -f docker/Dockerfile.dev -t {{ cookiecutter.project_slug }}:dev .
 ```
 
 ### Running Containers
 
 ```bash
 # Production mode
-docker run -p 8000:8000 fastmcp-template:latest
+docker run -p 8000:8000 {{ cookiecutter.project_slug }}:latest
 
 # With Langfuse tracing
 docker run -p 8000:8000 \
   -e LANGFUSE_PUBLIC_KEY=pk-... \
   -e LANGFUSE_SECRET_KEY=sk-... \
-  fastmcp-template:latest
+  {{ cookiecutter.project_slug }}:latest
 
 # Development mode with hot reload
-docker run -p 8000:8000 -v $(pwd)/app:/app/app:ro fastmcp-template:dev
+docker run -p 8000:8000 -v $(pwd)/app:/app/app:ro {{ cookiecutter.project_slug }}:dev
 ```
 
 ### Docker Compose
@@ -292,7 +292,7 @@ docker compose build
 Create your own FastMCP server by extending the base:
 
 ```dockerfile
-FROM ghcr.io/l4b4r4b4b4/fastmcp-base:latest
+FROM ghcr.io/{{ cookiecutter.github_username }}/{{ cookiecutter.project_slug }}-base:latest
 
 # Copy your application
 COPY app/ /app/app/
@@ -308,8 +308,8 @@ The GitHub Actions workflow automatically builds and publishes images:
 ```yaml
 # Triggered on push to main or version tags
 # Images published to:
-#   ghcr.io/l4b4r4b4b4/fastmcp-base:latest
-#   ghcr.io/l4b4r4b4b4/fastmcp-template:latest
+#   ghcr.io/{{ cookiecutter.github_username }}/{{ cookiecutter.project_slug }}-base:latest
+#   ghcr.io/{{ cookiecutter.github_username }}/{{ cookiecutter.project_slug }}:latest
 ```
 
 ## Troubleshooting

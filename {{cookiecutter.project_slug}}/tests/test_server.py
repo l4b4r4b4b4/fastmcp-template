@@ -1,4 +1,7 @@
-"""Tests for the fastmcp-template server module."""
+{%- set use_demo_tools = (cookiecutter.template_variant == 'full') or (cookiecutter.template_variant == 'custom' and cookiecutter.include_demo_tools == 'yes') -%}
+{%- set use_secret_tools = (cookiecutter.template_variant == 'full') or (cookiecutter.template_variant == 'custom' and cookiecutter.include_secret_tools == 'yes') -%}
+{%- set use_langfuse = (cookiecutter.template_variant in ['standard', 'full']) or (cookiecutter.template_variant == 'custom' and cookiecutter.include_langfuse == 'yes') -%}
+"""Tests for the {{ cookiecutter.project_name }} server module."""
 
 from __future__ import annotations
 
@@ -7,6 +10,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from app.server import cache, mcp
+{% if use_langfuse %}
 from app.tracing import (
     MockContext,
     enable_test_mode,
@@ -14,22 +18,24 @@ from app.tracing import (
     is_langfuse_enabled,
     is_test_mode_enabled,
 )
+{% endif %}
 
 
 class TestServerInitialization:
     """Tests for server initialization."""
 
     def test_mcp_instance_exists(self) -> None:
-        """Test that FastMCP instance is created."""
+        """Test that MCP instance is created."""
         assert mcp is not None
-        assert mcp.name == "FastMCP Template"
+        assert mcp.name == "{{ cookiecutter.project_name }}"
 
     def test_cache_instance_exists(self) -> None:
-        """Test that RefCache instance is created."""
+        """Test that cache instance is created."""
         assert cache is not None
-        assert cache.name == "fastmcp-template"
+        assert cache.name == "{{ cookiecutter.project_slug }}"
 
 
+{% if use_demo_tools %}
 class TestHelloTool:
     """Tests for the hello tool."""
 
@@ -46,14 +52,16 @@ class TestHelloTool:
         """Test hello with default name."""
         result = self._call_hello()
         assert result["message"] == "Hello, World!"
-        assert result["server"] == "fastmcp-template"
+        assert result["server"] == "{{ cookiecutter.project_slug }}"
 
     def test_hello_custom_name(self) -> None:
         """Test hello with custom name."""
         result = self._call_hello("Alice")
         assert result["message"] == "Hello, Alice!"
+{% endif %}
 
 
+{% if use_langfuse %}
 class TestTracingModule:
     """Tests for the tracing module."""
 
@@ -134,8 +142,10 @@ class TestTracingModule:
         attrs = get_langfuse_attributes(operation="cache_set")
         assert attrs["metadata"]["operation"] == "cache_set"
         assert "cacheset" in attrs["tags"]
+{% endif %}
 
 
+{% if use_langfuse %}
 class TestContextManagementTools:
     """Tests for context management tools."""
 
@@ -228,6 +238,7 @@ class TestContextManagementTools:
         assert "secret_key_set" in result
         assert "test_mode_enabled" in result
         assert "langfuse_attributes" in result
+{% endif %}
 
 
 class TestHealthCheck:
@@ -254,14 +265,14 @@ class TestHealthCheck:
         result = self._call_health_check()
 
         assert "server" in result
-        assert result["server"] == "fastmcp-template"
+        assert result["server"] == "{{ cookiecutter.project_slug }}"
 
     def test_health_check_returns_cache_name(self) -> None:
         """Test that health check returns cache name."""
         result = self._call_health_check()
 
         assert "cache" in result
-        assert result["cache"] == "fastmcp-template"
+        assert result["cache"] == "{{ cookiecutter.project_slug }}"
 
 
 class TestMCPConfiguration:
@@ -276,11 +287,14 @@ class TestMCPConfiguration:
         """Test that instructions mention caching."""
         assert "cach" in mcp.instructions.lower()
 
+{% if use_secret_tools %}
     def test_instructions_mention_secret(self) -> None:
         """Test that instructions mention secret computation."""
         assert "secret" in mcp.instructions.lower()
+{% endif %}
 
 
+{% if use_demo_tools %}
 class TestGenerateItems:
     """Tests for the generate_items tool."""
 
@@ -353,8 +367,10 @@ class TestGenerateItems:
                 assert "id" in item
                 assert "name" in item
                 assert "value" in item
+{% endif %}
 
 
+{% if use_secret_tools %}
 class TestStoreSecret:
     """Tests for the store_secret tool."""
 
@@ -483,6 +499,7 @@ class TestComputeWithSecret:
         """Test that invalid reference raises error."""
         with pytest.raises(ValueError, match="not found"):
             self._call_compute_with_secret("invalid:ref:id", multiplier=1.0)
+{% endif %}
 
 
 class TestGetCachedResult:
@@ -495,6 +512,7 @@ class TestGetCachedResult:
         yield
         cache.clear()
 
+{% if use_secret_tools %}
     def _call_store_secret(self, name: str, value: float) -> dict:
         """Helper to store a value in cache."""
         from app import server
@@ -503,6 +521,7 @@ class TestGetCachedResult:
         if hasattr(store_fn, "fn"):
             return store_fn.fn(name, value)
         return store_fn(name, value)
+{% endif %}
 
     async def _call_get_cached_result(
         self,
@@ -527,6 +546,7 @@ class TestGetCachedResult:
         assert "error" in result
         assert result["ref_id"] == "nonexistent:ref"
 
+{% if use_secret_tools %}
     @pytest.mark.asyncio
     async def test_get_cached_result_with_valid_ref(self) -> None:
         """Test getting a cached result with valid reference."""
@@ -539,6 +559,7 @@ class TestGetCachedResult:
 
         # Should return either data or permission error (agent can't read secrets)
         assert "ref_id" in result
+{% endif %}
 
     @pytest.mark.asyncio
     async def test_get_cached_result_not_found(self) -> None:
@@ -621,6 +642,7 @@ class TestTyperCLI:
 class TestPydanticModels:
     """Tests for Pydantic input models."""
 
+{% if use_demo_tools %}
     def test_item_generation_input_defaults(self) -> None:
         """Test ItemGenerationInput default values."""
         from app.tools.demo import ItemGenerationInput
@@ -648,7 +670,9 @@ class TestPydanticModels:
 
         with pytest.raises(ValidationError):
             ItemGenerationInput(count=20000)  # Above maximum
+{% endif %}
 
+{% if use_secret_tools %}
     def test_secret_input(self) -> None:
         """Test SecretInput model."""
         from app.tools.secrets import SecretInput
@@ -680,6 +704,7 @@ class TestPydanticModels:
 
         model = SecretComputeInput(secret_ref="ref:456")
         assert model.multiplier == 1.0
+{% endif %}
 
     def test_cache_query_input(self) -> None:
         """Test CacheQueryInput model."""
@@ -718,6 +743,7 @@ class TestTemplateGuidePrompt:
         assert isinstance(result, str)
         assert len(result) > 0
 
+{% if use_demo_tools %}
     def test_template_guide_mentions_hello(self) -> None:
         """Test that guide mentions hello tool."""
         result = self._call_template_guide()
@@ -727,13 +753,16 @@ class TestTemplateGuidePrompt:
         """Test that guide mentions generate_items tool."""
         result = self._call_template_guide()
         assert "generate_items" in result
+{% endif %}
 
     def test_template_guide_mentions_pagination(self) -> None:
         """Test that guide mentions pagination."""
         result = self._call_template_guide()
         assert "paginate" in result.lower() or "page" in result.lower()
 
+{% if use_secret_tools %}
     def test_template_guide_mentions_secret(self) -> None:
         """Test that guide mentions secret computation."""
         result = self._call_template_guide()
         assert "secret" in result.lower()
+{% endif %}

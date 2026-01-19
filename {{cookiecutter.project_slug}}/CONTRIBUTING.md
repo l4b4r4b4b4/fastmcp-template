@@ -1,6 +1,6 @@
-# Contributing to fastmcp-template
+# Contributing to {{ cookiecutter.project_slug }}
 
-Thank you for your interest in contributing to fastmcp-template! This document outlines the conventions and guidelines for contributing to this project.
+Thank you for your interest in contributing to {{ cookiecutter.project_slug }}! This document outlines the conventions and guidelines for contributing to this project.
 
 ## Development Setup
 
@@ -14,8 +14,8 @@ Thank you for your interest in contributing to fastmcp-template! This document o
 
 ```bash
 # Clone the repository
-git clone https://github.com/l4b4r4b4b4/fastmcp-template
-cd fastmcp-template
+git clone https://github.com/{{ cookiecutter.github_username }}/{{ cookiecutter.project_slug }}
+cd {{ cookiecutter.project_slug }}
 
 # Option 1: Use Nix dev shell (recommended)
 nix develop
@@ -314,6 +314,92 @@ def process_secret(secret_ref: str) -> dict:
     secret = cache.resolve(secret_ref, permission=Permission.EXECUTE)
     return {"hash": hash(secret)}  # Agent sees result, not secret
 ```
+
+## Repository Setup
+
+### Branch Protection Rules
+
+To ensure code quality and prevent accidental breakage, configure branch protection rules for the `main` branch.
+
+#### Required Setup
+
+Navigate to **Settings → Branches → Branch protection rules** and configure:
+
+**1. Require a pull request before merging**
+- ✅ Require approvals: 1+ (recommended for teams)
+- ✅ Dismiss stale pull request approvals when new commits are pushed
+- ✅ Require review from Code Owners (optional, if using CODEOWNERS file)
+- ✅ Require approval of the most recent reviewable push
+
+**2. Require status checks to pass before merging**
+- ✅ Require branches to be up to date before merging
+- Required status checks (select all that apply):
+  - `CI Success` ← **CRITICAL** (gates Release workflow)
+  - `Lint & Format`
+  - `Test (Python 3.12)`
+  - `Test (Python 3.13)` (if testing multiple versions)
+  - `Security Scan`
+  - `Build Package` (if running in CI)
+
+**3. Additional protections (recommended)**
+- ✅ Require linear history (enforces rebase/squash merges)
+- ✅ Require deployments to succeed before merging (if using environments)
+- ✅ Do not allow bypassing the above settings (prevents admin bypasses)
+
+**4. Rules applied to everyone**
+- ✅ Include administrators (enforce rules for all users)
+
+#### Why This Matters
+
+Branch protection ensures:
+- ✅ All code is reviewed before merging
+- ✅ CI must pass before merge (prevents broken code in main)
+- ✅ Release workflow only builds verified commits
+- ✅ Docker images are only published for tested code
+- ✅ PyPI packages are only published after images built
+
+#### Workflow Chain
+
+The CI-gated workflow ensures safe releases:
+
+```
+Feature Branch
+    ↓
+Open PR → CI Runs (lint, test, security)
+    ↓
+CI Passes ✅ (required by branch protection)
+    ↓
+Merge to main
+    ↓
+CI Re-runs on main
+    ↓
+Release Workflow waits for CI Success
+    ↓
+Docker Images Built & Pushed to GHCR
+    ↓
+Manually Create GitHub Release
+    ↓
+Publish Workflow verifies Release succeeded
+    ↓
+Package Published to PyPI
+    ↓
+CD Workflow deploys (staging/production)
+```
+
+**Key safeguards:**
+- Tag pushes verify CI passed before building images
+- Publish workflow verifies Release workflow succeeded
+- CD workflow only deploys after Release completes
+
+#### Testing Branch Protection
+
+Verify your setup works:
+
+1. Create a feature branch with a failing test
+2. Open a PR → CI should fail
+3. Attempt to merge → Should be blocked by branch protection
+4. Fix the test, push changes
+5. CI passes → Merge becomes available
 
 ## Questions?
 

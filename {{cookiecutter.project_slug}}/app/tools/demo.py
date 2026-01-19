@@ -1,4 +1,4 @@
-"""Demo tools for FastMCP Template Server.
+"""Demo tools for {{ cookiecutter.project_name }}.
 
 This module contains simple demonstration tools that showcase
 basic MCP tool patterns and caching functionality.
@@ -43,7 +43,7 @@ def hello(name: str = "World") -> dict[str, Any]:
     """
     return {
         "message": f"Hello, {name}!",
-        "server": "fastmcp-template",
+        "server": "{{ cookiecutter.project_slug }}",
     }
 
 
