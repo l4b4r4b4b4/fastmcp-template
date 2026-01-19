@@ -158,33 +158,70 @@ UV is 10-100x faster, reproducible, follows PEP 621, single source of truth.
 
 ## Testing
 
+### Development Approach: Pragmatic Testing
+
+**Workflow:** Implement → Manual Test → Write Tests
+
+This pragmatic approach optimizes for MCP server development:
+1. **Implement feature** - Write the code first
+2. **Manual testing** - Verify it works interactively (run server, test tools)
+3. **Write tests** - Add unit/integration/e2e tests for critical paths
+
+**Rationale:** MCP servers are integration-heavy. Strict TDD adds friction when you're exploring API shapes or wrapping external services. Test after implementation catches real issues without slowing iteration.
+
 ### Hard Rules
-- **Test behavior, not implementation**
-- **One thing per test** - focused test cases
-- **Deterministic tests** - mock time, randomness, I/O
-- **Test error paths** - exceptions with correct types/messages
+- **Test behavior, not implementation** - Tests should survive refactoring
+- **One thing per test** - Focused test cases with clear assertions
+- **Deterministic tests** - Mock time, randomness, I/O for reproducibility
+- **Test error paths** - Exceptions with correct types and messages
+- **Critical paths require tests** - Core functionality must be tested before merge
 
 ### Soft Rules
-- Use pytest fixtures
-- Descriptive test names
+- Use pytest fixtures for setup/teardown
+- Descriptive test names that explain what's being tested
 - Integration tests for component interaction
 - Test edge cases (empty, None, boundaries)
+- E2E tests for critical user workflows
+- Not everything needs tests - use judgment for trivial code
 
 ---
 
-## Dependency Injection & Design Patterns
+## Design Patterns (Guidelines, Not Mandates)
+
+Design patterns are tools, not rules. Use what fits your project's complexity.
 
 ### Hard Rules
-- **Constructor injection only** - Never property/setter injection or service locators
-- **No circular dependencies** - Extract third class or use events
-- **Protocol-based contracts** - All dependencies are protocols, not concrete classes
+- **No circular dependencies** - Extract third class or use events if detected
 
-### Soft Rules
-- **Factory pattern** for complex construction
-- **Explicit over implicit** - Pass dependencies explicitly, avoid global state
-- **Test-friendly design** - If hard to test (many mocks), refactor
-- **Adapter pattern** for external integrations - Wrap third-party APIs behind protocols
-- **Document injection points** - Type hints and docstrings show what/why
+### Recommended Patterns (Use When Appropriate)
+
+**For testability:**
+- **Constructor injection** - Pass dependencies explicitly for easy mocking
+- **Protocol-based contracts** - Define interfaces for swappable implementations
+
+**For maintainability:**
+- **Adapter pattern** - Wrap third-party APIs when you might swap providers
+- **Factory pattern** - Use for complex object construction
+
+**For simplicity:**
+- **Direct instantiation** - Fine for single-implementation dependencies
+- **Module-level functions** - Fine for stateless utilities
+- **Global config objects** - Acceptable for read-only configuration
+
+### When to Use DI vs. Simpler Approaches
+
+| Scenario | Recommendation |
+|----------|----------------|
+| Single database backend | Direct instantiation is fine |
+| Multiple possible backends | Use protocols + injection |
+| External API wrapper | Consider adapter if might swap |
+| Simple utility function | Module-level function is fine |
+| Complex initialization | Factory pattern |
+
+### Anti-Patterns (Avoid These)
+- Service locators (hidden dependencies)
+- Setter injection (mutable state after construction)
+- Deep inheritance hierarchies (prefer composition)
 
 ---
 
@@ -229,9 +266,9 @@ UV is 10-100x faster, reproducible, follows PEP 621, single source of truth.
 
 **Step 4: Implement**
 - **For Goals:** Create task directories and scratchpads if multi-task
-- **For Tasks:** Write tests first (or alongside code), follow all paradigms
+- **For Tasks:** Follow pragmatic workflow: implement → manual test → write tests
 - Small, reviewable changes
-- Run tests and linters after each change
+- Run linters after each change, tests before committing
 
 **Step 5: Document & Review**
 - Update docstrings
@@ -269,7 +306,7 @@ UV is 10-100x faster, reproducible, follows PEP 621, single source of truth.
    - Test strategy
    - Expected outcomes
 3. Pitch approach, wait for approval
-4. Implement with TDD
+4. Implement with pragmatic testing (implement → test manually → write tests)
 5. Document **what was completed** in task scratchpad
 
 **Task 02 of Goal 2:**

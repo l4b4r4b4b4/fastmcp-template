@@ -1,9 +1,9 @@
 # Goal 07: Add Example Integrations
 
-## Status: ⚪ Not Started
+## Status: 🟡 In Progress
 
 **Created:** 2025-01-08
-**Updated:** 2025-01-08
+**Updated:** 2026-01-19
 **Priority:** Medium
 **Estimated Effort:** 4-6 hours
 **Depends On:** 
@@ -328,6 +328,11 @@ async def fetch_api_data(
 
 ### Task 05: Add Tests for Examples
 
+**Development Approach:** Pragmatic Testing
+1. Implement example tools first
+2. Manual testing - run server, verify tools work
+3. Write tests for critical paths (not TDD)
+
 **File:** `tests/test_examples_database.py`
 
 **Test patterns:**
@@ -484,6 +489,7 @@ Includes:
 - Show async/await patterns throughout
 - Include performance considerations
 - Add cost/rate limit warnings
+- **Pragmatic testing:** Implement first, test after (not strict TDD)
 
 ---
 
@@ -536,3 +542,5 @@ After initial implementation:
 | 2025-01-08 | Include security patterns | Education + safety |
 | 2025-01-08 | Comprehensive tests | Examples must be reliable |
 | 2025-01-08 | Separate docs per category | Easier to navigate |
+| 2026-01-19 | Status → In Progress | Starting implementation |
+| 2026-01-19 | Pragmatic testing approach | Implement → manual test → write tests |

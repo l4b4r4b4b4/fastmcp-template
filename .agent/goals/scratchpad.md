@@ -14,9 +14,9 @@
 | 04 | Enforce CI-Gated Workflow | 🟢 Complete | High | 2025-01-08 |
 | 05 | Add Template CI Testing | 🟢 Complete | High | 2025-01-16 |
 | 06 | Add Template Variants + Custom | 🟢 Complete | Medium | 2025-01-16 |
-| 07 | Add Example Integrations | 🟡 In Progress | Medium | 2026-01-19 |
-| 08 | Zed Project-Specific Thread Storage | 🟡 In Progress | Low | 2026-01-19 |
-| 09 | Customize .rules With Cookiecutter | 🟢 Complete | Medium | 2026-01-19 |
+| 07 | Add Example Integrations | 🟡 In Progress | Medium | 2025-01-19 |
+| 08 | Zed Project-Specific Thread Storage | 🟡 In Progress | Low | 2025-01-19 |
+| 09 | Customize .rules With Cookiecutter | 🟢 Complete | Medium | 2025-01-19 |
 | 10 | (Reserved) | ⚪ Not Started | - | - |
 
 ---
@@ -79,14 +79,20 @@
 
 ## Recent Activity
 
-- **2026-01-19:** Starting Implementation Branch - Goals 07 & 08 🚀
+- **2025-01-19:** Updated .rules to Pragmatic Testing Approach 📝
+  - Replaced strict TDD with "implement → manual test → write tests" workflow
+  - Made DI/design patterns more flexible (recommendations vs mandates)
+  - Added guidance for when to use DI vs simpler approaches
+  - Better fit for MCP server development patterns
+
+- **2025-01-19:** Starting Implementation Branch - Goals 07 & 08 🚀
   - Created `feat/implement-remaining-goals` branch for comprehensive implementation
   - Will work continuously with CI feedback but merge only at the end
   - Goal 07: Example Integrations (database, API, filesystem, services) - 4-6 hours
   - Goal 08: Zed Thread Storage (research + config) - 1-2 hours
   - **Strategy:** Implement both goals in single branch with incremental commits
 
-- **2026-01-19:** Goal 09 Complete - Customize .rules With Cookiecutter ✅
+- **2025-01-19:** Goal 09 Complete - Customize .rules With Cookiecutter ✅
   - ✅ Created initial Goal 01 template for generated projects (guides v0.0.0 release)
   - ✅ Templated .rules header with project name and Docker references
   - ✅ Added `include_custom_rules` option for project-specific rules
@@ -95,7 +101,7 @@
   - **Files:** 9 files modified, 358 insertions, 26 deletions
   - **Tested:** Standard (75 tests) and minimal (60 tests) variants working
 
-- **2025-01-16:** Goal 06 Complete - Add Template Variants + Custom ✅
+- **2025-01-19:** Goal 06 Complete - Add Template Variants + Custom ✅
   - Added `template_variant` with 3 presets + custom option
   - Presets: minimal (60 tests), standard (75 tests), full (101 tests)
   - Custom: Allows any of 8 possible combinations (choose demo/secret/langfuse individually)
