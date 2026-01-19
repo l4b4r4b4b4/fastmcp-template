@@ -23,7 +23,7 @@ def run_command(cmd: list[str], description: str, critical: bool = False) -> boo
     """
     print(f"→ {description}...")
     try:
-        result = subprocess.run(
+        subprocess.run(
             cmd,
             check=True,
             capture_output=True,
@@ -36,7 +36,7 @@ def run_command(cmd: list[str], description: str, critical: bool = False) -> boo
         error_msg = e.stderr.strip() if e.stderr else str(e)
         print(f"  ✗ {description} failed: {error_msg}")
         if critical:
-            print(f"\nFatal error during project setup. Exiting.")
+            print("\nFatal error during project setup. Exiting.")
             sys.exit(1)
         return False
     except FileNotFoundError:
@@ -87,7 +87,7 @@ def main() -> None:
                 deps_list = [d.strip() for d in extra_deps.split(",") if d.strip()]
                 if deps_list:
                     if not run_command(
-                        ["uv", "add"] + deps_list,
+                        ["uv", "add", *deps_list],
                         f"Adding extra dependencies: {', '.join(deps_list)}",
                     ):
                         warnings.append(
@@ -101,7 +101,7 @@ def main() -> None:
                 ]
                 if dev_deps_list:
                     if not run_command(
-                        ["uv", "add", "--dev"] + dev_deps_list,
+                        ["uv", "add", "--dev", *dev_deps_list],
                         f"Adding extra dev dependencies: {', '.join(dev_deps_list)}",
                     ):
                         warnings.append(
@@ -166,7 +166,7 @@ def main() -> None:
     else:
         print("  2. uv run pytest              # Run tests")
         print("  3. uv run ruff check .        # Check code quality")
-    print(f"  4. uv run fastmcp dev app/server.py  # Start development server")
+    print("  4. uv run fastmcp dev app/server.py  # Start development server")
     print("\nDocumentation:")
     print("  • README.md           - Getting started guide")
     print("  • TOOLS.md            - Tool implementation guide")

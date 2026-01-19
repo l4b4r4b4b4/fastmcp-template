@@ -149,7 +149,7 @@ _Add your project-specific rules here after generation._
 - Keep hardcoded but document that post_gen_project.py could update it
 - OR: Use Jinja2 `now` extension (requires cookiecutter config)
 
-**Decision:** Keep `"__year": "2025"` but add TODO comment - fixing this properly requires cookiecutter extensions.
+**Decision:** Skip this task - __year is used minimally and fixing requires cookiecutter extensions. Document as known limitation.
 
 ### Task 5: Verify and Test ⚪
 - Generate test project with `cookiecutter . --no-input`
@@ -217,4 +217,20 @@ _Add your project-specific rules here after generation._
   - `.rules` has hardcoded values that should be templated
   - `cookiecutter.json` has 22 variables, need to add `include_custom_rules`
 - Created detailed task breakdown with specific file changes
-- Ready to implement Task 1 (Create Initial Goal 01 Template)
+
+### 2026-01-19 - Tasks 1-3 Complete
+- ✅ **Task 1:** Created initial Goal 01 template structure
+  - `{{cookiecutter.project_slug}}/.agent/scratchpad.md` - Main session scratchpad
+  - `{{cookiecutter.project_slug}}/.agent/goals/scratchpad.md` - Goals index with Goal 01
+  - `{{cookiecutter.project_slug}}/.agent/goals/01-Initial-Setup-And-Release/scratchpad.md` - Initial goal for v0.0.0 release
+- ✅ **Task 2:** Templated .rules header and Docker references
+  - Header: `# .rules for {{ cookiecutter.project_name }}`
+  - Description: Template-specific with project name
+  - Docker: Python version and project slug templated
+- ✅ **Task 3:** Added custom rules support
+  - `cookiecutter.json`: Added `include_custom_rules` variable
+  - `.rules`: Added conditional custom rules section
+  - `pre_gen_project.py`: Display custom rules option
+  - `README.md`: Updated documentation
+- ⚪ **Task 4:** Skipped __year variable (known limitation)
+- ⚪ **Task 5:** Ready for verification testing
