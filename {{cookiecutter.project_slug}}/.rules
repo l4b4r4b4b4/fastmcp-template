@@ -281,7 +281,11 @@ UV is 10-100x faster, reproducible, follows PEP 621, single source of truth.
 - `edit_file` for modifying (not sed/awk)
 - `grep` tool for searching (not terminal grep)
 - `find_path` for file discovery (not terminal find)
-- Terminal ONLY for: tests, linters, builds, package management, git, system checks
+- **Use appropriate tools for dates** - Never assume dates like "2024" or "today"
+  - Use `terminal` with `date` command to get current date/time
+  - Check file modification times with tools, don't guess
+  - When referencing "recent" changes, verify actual timestamps
+- Terminal ONLY for: tests, linters, builds, package management, git, system checks, date/time queries
 
 ### Hard Rules: Code Quality
 - **Run `ruff check . --fix --unsafe-fixes && ruff format .`** before committing
@@ -360,8 +364,13 @@ the user provided in chat. Never repeat what's already in .rules file.
   - Current work-in-progress
   - Quick links to active goals/tasks
   - Recent session notes
+  - **DO NOT document goals here** - goals go in goals scratchpad only
   - **DO NOT duplicate** detailed plans, decisions, or task breakdowns
-- **Goals scratchpad** (`.agent/goals/NN-*/scratchpad.md`) - Goal-level planning
+- **Goals scratchpad** (`.agent/goals/scratchpad.md`) - Goals tracking only
+  - List of all goals with status
+  - High-level goal relationships
+  - **DO NOT duplicate** individual goal details
+- **Individual goal scratchpad** (`.agent/goals/NN-*/scratchpad.md`) - Goal-level planning
   - Objectives, success criteria, architecture decisions
   - Task breakdown and dependencies
   - **DO NOT duplicate** task-level implementation details

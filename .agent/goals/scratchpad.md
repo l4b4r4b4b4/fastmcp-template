@@ -15,8 +15,8 @@
 | 05 | Add Template CI Testing | 🟢 Complete | High | 2025-01-16 |
 | 06 | Add Template Variants + Custom | 🟢 Complete | Medium | 2025-01-16 |
 | 07 | Add Example Integrations | ⚪ Not Started | Medium | 2025-01-08 |
-| 08 | (Reserved) | ⚪ Not Started | - | - |
-| 09 | (Reserved) | ⚪ Not Started | - | - |
+| 08 | Zed Project-Specific Thread Storage | ⚪ Not Started | Low | - |
+| 09 | Customize .rules With Cookiecutter | ⚪ Not Started | Medium | 2026-01-19 |
 | 10 | (Reserved) | ⚪ Not Started | - | - |
 
 ---
@@ -59,6 +59,8 @@
 - [05-Add-Template-CI-Testing](./05-Add-Template-CI-Testing/scratchpad.md) — Test template generation in CI
 - [06-Add-Template-Variants](./06-Add-Template-Variants/scratchpad.md) — Add preset configurations (minimal, standard, full)
 - [07-Add-Example-Integrations](./07-Add-Example-Integrations/scratchpad.md) — Add real-world integration examples
+- [08-Zed-Project-Specific-Thread-Storage](./08-Zed-Project-Specific-Thread-Storage/scratchpad.md) — Zed thread storage
+- [09-Customize-Rules-With-Cookiecutter](./09-Customize-Rules-With-Cookiecutter/scratchpad.md) — Template .rules with cookiecutter variables
 
 ### Archived Goals
 - [A01-Add-API-Key-Checker](./archived/01-Add-API-Key-Checker/scratchpad.md) — Archived (superseded)
@@ -76,6 +78,13 @@
 ---
 
 ## Recent Activity
+
+- **2026-01-19:** Goal 09 Created - Customize .rules With Cookiecutter 📋
+  - Make .rules project-specific with cookiecutter variables
+  - Add `include_custom_rules` option for user-defined project rules
+  - Template header with project name, Docker CMD with project slug
+  - Consider conditional sections (Nix, Langfuse-specific rules)
+  - Estimated effort: 2-4 hours
 
 - **2025-01-16:** Goal 06 Complete - Add Template Variants + Custom ✅
   - Added `template_variant` with 3 presets + custom option
