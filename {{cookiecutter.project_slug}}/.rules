@@ -198,7 +198,7 @@ UV is 10-100x faster, reproducible, follows PEP 621, single source of truth.
 - **Problem Space Research:**
   - Understand the problem thoroughly before looking at solutions
   - Read relevant files (README, CONTRIBUTING, existing code)
-  - Review appropriate scratchpad (`.agent/scratchpad.md`, goal scratchpad, or task scratchpad)
+  - Review appropriate scratchpad (goal scratchpad or task scratchpad)
   - Ask clarifying questions about requirements and constraints
   - Define success criteria and edge cases
 - **Solution Space Research:**
@@ -336,7 +336,6 @@ the user provided in chat. Never repeat what's already in .rules file.
 ### Directory Structure
 ```
 .agent/
-├── scratchpad.md           # High-level index
 └── goals/
     ├── scratchpad.md       # Goals tracking
     ├── 00-Template-Goal/   # Template
@@ -360,15 +359,10 @@ the user provided in chat. Never repeat what's already in .rules file.
 - Use acceptance criteria as checklist
 
 ### Scratchpad Hierarchy & Content
-- **Main scratchpad** (`.agent/scratchpad.md`) - High-level session state only
-  - Current work-in-progress
-  - Quick links to active goals/tasks
-  - Recent session notes
-  - **DO NOT document goals here** - goals go in goals scratchpad only
-  - **DO NOT duplicate** detailed plans, decisions, or task breakdowns
-- **Goals scratchpad** (`.agent/goals/scratchpad.md`) - Goals tracking only
-  - List of all goals with status
-  - High-level goal relationships
+- **Goals index** (`.agent/goals/scratchpad.md`) - Central hub for all goals
+  - Goals tracking table with status and priorities
+  - Quick links to individual goal scratchpads
+  - Recent activity log
   - **DO NOT duplicate** individual goal details
 - **Individual goal scratchpad** (`.agent/goals/NN-*/scratchpad.md`) - Goal-level planning
   - Objectives, success criteria, architecture decisions
