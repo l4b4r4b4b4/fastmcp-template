@@ -15,8 +15,8 @@
 | 05 | Add Template CI Testing | 🟢 Complete | High | 2025-01-16 |
 | 06 | Add Template Variants + Custom | 🟢 Complete | Medium | 2025-01-16 |
 | 07 | Add Example Integrations | ⚪ Not Started | Medium | 2025-01-08 |
-| 08 | (Reserved) | ⚪ Not Started | - | - |
-| 09 | (Reserved) | ⚪ Not Started | - | - |
+| 08 | Zed Project-Specific Thread Storage | ⚪ Not Started | Low | - |
+| 09 | Customize .rules With Cookiecutter | 🟢 Complete | Medium | 2026-01-19 |
 | 10 | (Reserved) | ⚪ Not Started | - | - |
 
 ---
@@ -59,6 +59,8 @@
 - [05-Add-Template-CI-Testing](./05-Add-Template-CI-Testing/scratchpad.md) — Test template generation in CI
 - [06-Add-Template-Variants](./06-Add-Template-Variants/scratchpad.md) — Add preset configurations (minimal, standard, full)
 - [07-Add-Example-Integrations](./07-Add-Example-Integrations/scratchpad.md) — Add real-world integration examples
+- [08-Zed-Project-Specific-Thread-Storage](./08-Zed-Project-Specific-Thread-Storage/scratchpad.md) — Zed thread storage
+- [09-Customize-Rules-With-Cookiecutter](./09-Customize-Rules-With-Cookiecutter/scratchpad.md) — Template .rules with cookiecutter variables
 
 ### Archived Goals
 - [A01-Add-API-Key-Checker](./archived/01-Add-API-Key-Checker/scratchpad.md) — Archived (superseded)
@@ -76,6 +78,15 @@
 ---
 
 ## Recent Activity
+
+- **2026-01-19:** Goal 09 Complete - Customize .rules With Cookiecutter ✅
+  - ✅ Created initial Goal 01 template for generated projects (guides v0.0.0 release)
+  - ✅ Templated .rules header with project name and Docker references
+  - ✅ Added `include_custom_rules` option for project-specific rules
+  - ✅ Updated documentation and pre-generation hooks
+  - **Impact:** Every generated project now has personalized .rules and clear first goal
+  - **Files:** 9 files modified, 358 insertions, 26 deletions
+  - **Tested:** Standard (75 tests) and minimal (60 tests) variants working
 
 - **2025-01-16:** Goal 06 Complete - Add Template Variants + Custom ✅
   - Added `template_variant` with 3 presets + custom option

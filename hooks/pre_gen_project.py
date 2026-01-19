@@ -14,6 +14,7 @@ PROJECT_NAME = "{{ cookiecutter.project_name }}"
 DEMO_TOOLS = "{{ cookiecutter.include_demo_tools }}"
 SECRET_TOOLS = "{{ cookiecutter.include_secret_tools }}"
 LANGFUSE = "{{ cookiecutter.include_langfuse }}"
+CUSTOM_RULES = "{{ cookiecutter.include_custom_rules }}"
 
 # Variant configurations (for preset variants)
 VARIANT_CONFIG = {
@@ -56,6 +57,7 @@ def main() -> None:
     print(f"    • Demo tools:    {config['demo_tools']}")
     print(f"    • Secret tools:  {config['secret_tools']}")
     print(f"    • Langfuse:      {config['langfuse']}")
+    print(f"    • Custom rules:  {CUSTOM_RULES}")
     print()
 
     # Variant-specific messages

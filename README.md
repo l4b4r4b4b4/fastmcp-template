@@ -52,12 +52,12 @@ A fully-configured FastMCP server with:
 
 Choose a variant based on your needs:
 
-| Variant | Demo Tools | Secret Tools | Langfuse | Tests | Best For |
-|---------|------------|--------------|----------|-------|----------|
-| `minimal` | ❌ | ❌ | ❌ | 60 | Production servers, clean slate |
-| `standard` | ❌ | ❌ | ✅ | 75 | Recommended with observability |
-| `full` | ✅ | ✅ | ✅ | 101 | Learning, reference implementation |
-| `custom` | (choose) | (choose) | (choose) | varies | Advanced users, specific needs |
+| Variant | Demo Tools | Secret Tools | Langfuse | Custom Rules | Tests | Best For |
+|---------|------------|--------------|----------|--------------|-------|----------|
+| `minimal` | ❌ | ❌ | ❌ | ❌ | 60 | Production servers, clean slate |
+| `standard` | ❌ | ❌ | ✅ | ❌ | 75 | Recommended with observability |
+| `full` | ✅ | ✅ | ✅ | ❌ | 101 | Learning, reference implementation |
+| `custom` | (choose) | (choose) | (choose) | (choose) | varies | Advanced users, specific needs |
 
 ### Minimal (Production)
 
@@ -118,6 +118,7 @@ template_variant: custom
 include_demo_tools [no]: yes
 include_secret_tools [no]: no
 include_langfuse [yes]: yes
+include_custom_rules [no]: no
 ```
 
 Or non-interactively:
@@ -127,7 +128,8 @@ cookiecutter gh:l4b4r4b4b4/fastmcp-template --no-input \
   template_variant=custom \
   include_demo_tools=yes \
   include_secret_tools=no \
-  include_langfuse=yes
+  include_langfuse=yes \
+  include_custom_rules=no
 ```
 
 This gives you full control over all 8 possible combinations of features.
@@ -191,8 +193,11 @@ your-mcp-server/
 │   ├── publish.yml          # PyPI publishing
 │   └── release.yml          # Docker builds
 ├── .agent/                  # AI assistant workspace
-│   └── goals/
-│       └── 00-Template-Goal/  # Goal tracking template
+│   ├── scratchpad.md        # Main session notes
+│   └── goals/               # Goal tracking
+│       ├── scratchpad.md    # Goals index
+│       ├── 00-Template-Goal/  # Goal template
+│       └── 01-Initial-Setup-And-Release/  # First goal (validate 0.0.0 release)
 ├── pyproject.toml           # Project configuration
 ├── docker-compose.yml       # Local development
 └── README.md                # Project documentation
@@ -200,15 +205,21 @@ your-mcp-server/
 
 ## Next Steps After Generation
 
-1. **Review the generated project**
+1. **Follow Goal 01** - Every generated project includes a first goal:
    ```bash
    cd your-mcp-server
-   cat README.md  # Project-specific documentation
+   cat .agent/goals/01-Initial-Setup-And-Release/scratchpad.md
    ```
+   This guides you through:
+   - Setting up the development environment
+   - Running tests and quality checks
+   - Publishing version 0.0.0 to validate the release pipeline
 
-2. **Run tests**
+2. **Run the validation checklist**
    ```bash
-   uv run pytest
+   uv sync                    # Install dependencies
+   uv run pytest            # Run tests
+   ruff check . --fix && ruff format .  # Code quality
    ```
 
 3. **Try the server**
@@ -216,12 +227,16 @@ your-mcp-server/
    uv run your-mcp-server stdio
    ```
 
-4. **Add your tools**
+4. **Customize the .rules file** (if you enabled custom rules)
+   - Edit the "Project-Specific Rules" section
+   - Add your team's conventions, constraints, or guidelines
+
+5. **Add your tools**
    - Create tool modules in `app/tools/`
    - Register in `app/server.py`
    - Add tests in `tests/`
 
-5. **Configure GitHub publishing** (optional)
+6. **Configure GitHub publishing** (optional)
    - PyPI: Add trusted publisher at pypi.org
    - GHCR: GitHub Actions will publish on release
 
