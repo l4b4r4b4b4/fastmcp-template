@@ -16,6 +16,8 @@
   "langfuse_version": ">=3.10.0",
   "pydantic_version": ">=2.10.0",
   "github_username": "l4b4r4b4b4",
+  "create_github_repo": ["yes", "no"],
+  "github_repo_visibility": ["public", "private"],
   "extra_dependencies": "",
   "extra_dev_dependencies": "",
   "__project_slug_underscore": "{{ cookiecutter.project_slug.replace('-', '_') }}",

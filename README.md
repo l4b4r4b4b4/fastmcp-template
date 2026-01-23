@@ -19,10 +19,13 @@ uv tool install cookiecutter
 # Generate your project (interactive)
 cookiecutter gh:l4b4r4b4b4/fastmcp-template
 
-# Or use a variant directly (no prompts)
+# Or use a variant directly with auto-detected GitHub info
 cookiecutter gh:l4b4r4b4b4/fastmcp-template --no-input \
   project_name="My Server" \
-  template_variant=standard
+  template_variant=standard \
+  github_username="$(gh api user --jq .login)" \
+  author_name="$(gh api user --jq .name)" \
+  author_email="$(gh api user --jq .email)"
 
 # Navigate to your new project
 cd your-mcp-server
@@ -31,6 +34,8 @@ cd your-mcp-server
 uv run pytest
 uv run your-mcp-server stdio
 ```
+
+**💡 Tip:** If you have `gh` CLI authenticated, the template will auto-detect your GitHub username when creating repositories. For other fields, use the command above to pass your GitHub profile info automatically.
 
 ### What You Get
 
@@ -134,6 +139,61 @@ cookiecutter gh:l4b4r4b4b4/fastmcp-template --no-input \
 
 This gives you full control over all 8 possible combinations of features.
 
+### Auto-Detecting Your GitHub Info
+
+If you have `gh` CLI installed and authenticated, you can automatically use your GitHub profile information:
+
+```bash
+# Auto-detect GitHub username, name, and email
+cookiecutter gh:l4b4r4b4b4/fastmcp-template \
+  github_username="$(gh api user --jq .login)" \
+  author_name="$(gh api user --jq .name)" \
+  author_email="$(gh api user --jq .email)"
+```
+
+Or create a shell alias for convenience:
+```bash
+# Add to ~/.bashrc or ~/.zshrc
+alias mcp-new='cookiecutter gh:l4b4r4b4b4/fastmcp-template \
+  github_username="$(gh api user --jq .login)" \
+  author_name="$(gh api user --jq .name)" \
+  author_email="$(gh api user --jq .email)"'
+
+# Then just run:
+mcp-new
+```
+
+### GitHub Repository Creation
+
+The template can automatically create a GitHub repository and push your initial commit:
+
+```bash
+cookiecutter gh:l4b4r4b4b4/fastmcp-template
+
+# When prompted:
+create_github_repo [no]: yes
+github_repo_visibility [public]: public  # or private
+```
+
+**Requirements:**
+- [GitHub CLI](https://cli.github.com) installed (`brew install gh` or see https://cli.github.com)
+- Authenticated with `gh auth login`
+
+**What it does:**
+1. Auto-detects your authenticated GitHub username
+2. Creates a new GitHub repository under your account
+3. Sets it as the remote origin
+4. Pushes the initial commit
+
+**If setup fails:**
+The template will show warnings but won't abort. You can create the repo manually:
+```bash
+gh auth login  # If not authenticated
+gh repo create your-project --public --source=. --push
+```
+
+**Note:** Repository creation is **enabled by default** (`create_github_repo=yes`). Set to `no` if you want to skip it.
+
 ## Features
 
 ### Reference-Based Caching (RefCache)
@@ -215,28 +275,34 @@ your-mcp-server/
    - Running tests and quality checks
    - Publishing version 0.0.0 to validate the release pipeline
 
-2. **Run the validation checklist**
+2. **Verify GitHub repository** (if you enabled repo creation)
+   ```bash
+   git remote -v              # Check remote is set
+   # Visit https://github.com/your-username/your-project
+   ```
+
+3. **Run the validation checklist**
    ```bash
    uv sync                    # Install dependencies
    uv run pytest            # Run tests
    ruff check . --fix && ruff format .  # Code quality
    ```
 
-3. **Try the server**
+4. **Try the server**
    ```bash
    uv run your-mcp-server stdio
    ```
 
-4. **Customize the .rules file** (if you enabled custom rules)
+5. **Customize the .rules file** (if you enabled custom rules)
    - Edit the "Project-Specific Rules" section
    - Add your team's conventions, constraints, or guidelines
 
-5. **Add your tools**
+6. **Add your tools**
    - Create tool modules in `app/tools/`
    - Register in `app/server.py`
    - Add tests in `tests/`
 
-6. **Configure GitHub publishing** (optional)
+7. **Configure GitHub publishing** (optional)
    - PyPI: Add trusted publisher at pypi.org
    - GHCR: GitHub Actions will publish on release
 

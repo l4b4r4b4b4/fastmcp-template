@@ -17,7 +17,7 @@
 | 07 | Add Example Integrations | 🟡 In Progress | Medium | 2025-01-19 |
 | 08 | Zed Project-Specific Thread Storage | 🟡 In Progress | Low | 2025-01-19 |
 | 09 | Customize .rules With Cookiecutter | 🟢 Complete | Medium | 2025-01-19 |
-| 10 | (Reserved) | ⚪ Not Started | - | - |
+| 10 | Add GitHub Repo Creation | 🟢 Complete | Medium | 2025-01-20 |
 
 ---
 
@@ -61,6 +61,7 @@
 - [07-Add-Example-Integrations](./07-Add-Example-Integrations/scratchpad.md) — Add real-world integration examples
 - [08-Zed-Project-Specific-Thread-Storage](./08-Zed-Project-Specific-Thread-Storage/scratchpad.md) — Zed thread storage
 - [09-Customize-Rules-With-Cookiecutter](./09-Customize-Rules-With-Cookiecutter/scratchpad.md) — Template .rules with cookiecutter variables
+- [10-Add-GitHub-Repo-Creation](./10-Add-GitHub-Repo-Creation/scratchpad.md) — Auto-create GitHub repos with gh CLI
 
 ### Archived Goals
 - [A01-Add-API-Key-Checker](./archived/01-Add-API-Key-Checker/scratchpad.md) — Archived (superseded)
@@ -78,6 +79,18 @@
 ---
 
 ## Recent Activity
+
+- **2025-01-20:** Goal 10 Complete - Add GitHub Repo Creation ✅
+  - ✅ Added `create_github_repo` option (default: yes)
+  - ✅ Added `github_repo_visibility` option (default: public)
+  - ✅ Auto-creates GitHub repo and pushes initial commit using gh CLI
+  - ✅ Auto-detects authenticated GitHub username for display
+  - ✅ Non-blocking errors with helpful warnings
+  - ✅ Documentation includes auto-detection examples for user info
+  - ✅ Shell alias example for convenient project creation
+  - **Impact:** Streamlined project setup - from template to GitHub in one command
+  - **Files:** 3 files modified, ~142 lines added
+  - **Tested:** Both with and without repo creation, all 60 tests pass
 
 - **2025-01-19:** Updated .rules to Pragmatic Testing Approach 📝
   - Replaced strict TDD with "implement → manual test → write tests" workflow

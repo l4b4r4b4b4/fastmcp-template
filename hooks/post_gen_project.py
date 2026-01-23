@@ -69,6 +69,9 @@ def main() -> None:
     project_name = "{{ cookiecutter.project_name }}"
     extra_deps = "{{ cookiecutter.extra_dependencies }}".strip()
     extra_dev_deps = "{{ cookiecutter.extra_dev_dependencies }}".strip()
+    create_github_repo = "{{ cookiecutter.create_github_repo }}"
+    github_repo_visibility = "{{ cookiecutter.github_repo_visibility }}"
+    github_username = "{{ cookiecutter.github_username }}"
 
     print("\n" + "=" * 70)
     print(f"Setting up '{project_name}'...")
@@ -137,12 +140,82 @@ def main() -> None:
         warnings.append("git not found. Install it to use version control.")
 
     # Task 3: Create initial commit (only if git init succeeded)
+    initial_commit_success = False
     if git_init_success:
         if run_command(["git", "add", "."], "Staging files"):
-            run_command(
+            if run_command(
                 ["git", "commit", "-m", "Initial commit from FastMCP template"],
                 "Creating initial commit",
+            ):
+                initial_commit_success = True
+
+    # Task 4: Create GitHub repository (if requested and commit succeeded)
+    if create_github_repo == "yes" and initial_commit_success:
+        if check_command_exists("gh"):
+            # Check if gh CLI is authenticated and get username
+            print("→ Checking GitHub authentication...")
+            try:
+                auth_check = subprocess.run(
+                    ["gh", "auth", "status"],
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                    cwd=Path.cwd(),
+                )
+
+                # Try to get authenticated username
+                try:
+                    username_result = subprocess.run(
+                        ["gh", "api", "user", "--jq", ".login"],
+                        check=True,
+                        capture_output=True,
+                        text=True,
+                        cwd=Path.cwd(),
+                    )
+                    detected_username = username_result.stdout.strip()
+                    if detected_username:
+                        github_username = detected_username
+                except subprocess.CalledProcessError:
+                    pass  # Use default from cookiecutter.json
+
+                print("  ✓ GitHub CLI authenticated")
+
+                # Create remote repository and push
+                visibility_flag = f"--{github_repo_visibility}"
+                repo_name = f"{github_username}/{project_slug}"
+                if run_command(
+                    [
+                        "gh",
+                        "repo",
+                        "create",
+                        project_slug,
+                        visibility_flag,
+                        "--source=.",
+                        "--push",
+                    ],
+                    f"Creating {github_repo_visibility} GitHub repository '{repo_name}'",
+                ):
+                    print(f"  ✓ Repository URL: https://github.com/{repo_name}")
+                else:
+                    warnings.append(
+                        f"Failed to create GitHub repo. Create manually: gh repo create {project_slug} {visibility_flag} --source=. --push"
+                    )
+            except subprocess.CalledProcessError:
+                print("  ✗ GitHub CLI not authenticated")
+                warnings.append(
+                    "gh CLI not authenticated. Run 'gh auth login' to authenticate, then: "
+                    f"gh repo create {project_slug} --{github_repo_visibility} --source=. --push"
+                )
+        else:
+            print("→ Creating GitHub repository...")
+            print("  ✗ gh CLI not found - skipping GitHub repository creation")
+            warnings.append(
+                "gh CLI not found. Install it with: brew install gh (macOS) or see https://cli.github.com"
             )
+    elif create_github_repo == "yes" and not initial_commit_success:
+        warnings.append(
+            "Skipped GitHub repo creation because initial commit failed. Create repo manually after fixing git setup."
+        )
 
     # Print success message
     print("\n" + "=" * 70)
@@ -167,6 +240,10 @@ def main() -> None:
         print("  2. uv run pytest              # Run tests")
         print("  3. uv run ruff check .        # Check code quality")
     print("  4. uv run fastmcp dev app/server.py  # Start development server")
+    if create_github_repo == "yes" and initial_commit_success:
+        print(
+            f"\n✓ GitHub repository created: https://github.com/{github_username}/{project_slug}"
+        )
     print("\nDocumentation:")
     print("  • README.md           - Getting started guide")
     print("  • TOOLS.md            - Tool implementation guide")
