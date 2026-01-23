@@ -1,0 +1,22 @@
+{
+  "required_status_checks": {
+    "strict": true,
+    "checks": [
+      {"context": "Test minimal variant"},
+      {"context": "Test standard variant"},
+      {"context": "Test full variant"},
+      {"context": "Test custom-demos-only variant"},
+      {"context": "Test custom-secrets-only variant"},
+      {"context": "Test Summary"}
+    ]
+  },
+  "enforce_admins": false,
+  "required_pull_request_reviews": null,
+  "restrictions": null,
+  "allow_force_pushes": false,
+  "allow_deletions": false,
+  "block_creations": false,
+  "required_conversation_resolution": false,
+  "lock_branch": false,
+  "allow_fork_syncing": false
+}
