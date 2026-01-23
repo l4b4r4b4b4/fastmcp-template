@@ -18,6 +18,7 @@
   "github_username": "l4b4r4b4b4",
   "create_github_repo": ["yes", "no"],
   "github_repo_visibility": ["public", "private"],
+  "trigger_initial_release": ["no", "yes"],
   "extra_dependencies": "",
   "extra_dev_dependencies": "",
   "__project_slug_underscore": "{{ cookiecutter.project_slug.replace('-', '_') }}",
