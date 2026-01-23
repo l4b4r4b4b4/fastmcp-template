@@ -1,5 +1,4 @@
 {
-  "$schema": "zed://schemas/settings",
   "terminal": {
     "env": {
       "PYTHONPATH": "./src",
@@ -19,7 +18,8 @@
   },
   "languages": {
     "Python": {
-      "format_on_save": {
+      "format_on_save": "on",
+      "formatter": {
         "external": {
           "command": "ruff",
           "arguments": ["format", "-"],
