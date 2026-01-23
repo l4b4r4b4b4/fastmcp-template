@@ -72,6 +72,7 @@ def main() -> None:
     create_github_repo = "{{ cookiecutter.create_github_repo }}"
     github_repo_visibility = "{{ cookiecutter.github_repo_visibility }}"
     github_username = "{{ cookiecutter.github_username }}"
+    trigger_initial_release = "{{ cookiecutter.trigger_initial_release }}"
 
     print("\n" + "=" * 70)
     print(f"Setting up '{project_name}'...")
@@ -217,6 +218,83 @@ def main() -> None:
             "Skipped GitHub repo creation because initial commit failed. Create repo manually after fixing git setup."
         )
 
+    # Task 5: Set up branch protection ruleset (if repo was created)
+    github_repo_created = create_github_repo == "yes" and initial_commit_success
+    if github_repo_created and check_command_exists("gh"):
+        protection_file = Path.cwd() / ".github" / "main-branch-protection.json"
+        if protection_file.exists():
+            print("→ Setting up branch protection ruleset...")
+            try:
+                result = subprocess.run(
+                    [
+                        "gh",
+                        "api",
+                        f"repos/{github_username}/{project_slug}/rulesets",
+                        "-X",
+                        "POST",
+                        "-H",
+                        "Accept: application/vnd.github+json",
+                        "--input",
+                        str(protection_file),
+                    ],
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                    cwd=Path.cwd(),
+                )
+                print("  ✓ Branch protection ruleset configured")
+            except subprocess.CalledProcessError as e:
+                error_msg = e.stderr.strip() if e.stderr else str(e)
+                print(f"  ✗ Branch protection ruleset setup failed: {error_msg}")
+                warnings.append(
+                    f"Failed to set up branch protection. Apply manually: gh api repos/{github_username}/{project_slug}/rulesets -X POST --input .github/main-branch-protection.json"
+                )
+
+    # Task 6: Trigger initial release (if requested and repo was created)
+    initial_release_triggered = False
+    if trigger_initial_release == "yes" and github_repo_created:
+        if github_repo_visibility == "public":
+            print("→ Triggering initial v0.0.0 release...")
+            # Create and push the v0.0.0 tag
+            if run_command(
+                [
+                    "git",
+                    "tag",
+                    "-a",
+                    "v0.0.0",
+                    "-m",
+                    "Initial release - validates release pipeline",
+                ],
+                "Creating v0.0.0 tag",
+            ):
+                if run_command(
+                    ["git", "push", "origin", "v0.0.0"],
+                    "Pushing v0.0.0 tag to trigger release",
+                ):
+                    initial_release_triggered = True
+                    print("  ✓ Release workflow triggered!")
+                    print(
+                        f"  ✓ Check progress: https://github.com/{github_username}/{project_slug}/actions"
+                    )
+                else:
+                    warnings.append(
+                        "Failed to push v0.0.0 tag. Push manually: git push origin v0.0.0"
+                    )
+            else:
+                warnings.append(
+                    "Failed to create v0.0.0 tag. Create manually: git tag -a v0.0.0 -m 'Initial release' && git push origin v0.0.0"
+                )
+        else:
+            print("→ Skipping initial release (private repos can't publish to PyPI)")
+            warnings.append(
+                "Initial release skipped for private repo. PyPI trusted publishers require public repos."
+            )
+    elif trigger_initial_release == "yes" and not github_repo_created:
+        warnings.append(
+            "Skipped initial release because GitHub repo was not created. "
+            "After creating repo, run: git tag -a v0.0.0 -m 'Initial release' && git push origin v0.0.0"
+        )
+
     # Print success message
     print("\n" + "=" * 70)
     print(f"✓ Project '{project_name}' created successfully!")
@@ -244,6 +322,14 @@ def main() -> None:
         print(
             f"\n✓ GitHub repository created: https://github.com/{github_username}/{project_slug}"
         )
+    if initial_release_triggered:
+        print(
+            f"✓ Release v0.0.0 triggered: https://github.com/{github_username}/{project_slug}/actions"
+        )
+        print("\n📦 PyPI Publishing:")
+        print("   If you set up a pending trusted publisher on PyPI, your package")
+        print(f"   will be published automatically as: {project_slug}")
+        print("   Setup: https://pypi.org/manage/account/publishing/")
     print("\nDocumentation:")
     print("  • README.md           - Getting started guide")
     print("  • TOOLS.md            - Tool implementation guide")

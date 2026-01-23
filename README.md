@@ -194,6 +194,71 @@ gh repo create your-project --public --source=. --push
 
 **Note:** Repository creation is **enabled by default** (`create_github_repo=yes`). Set to `no` if you want to skip it.
 
+### Initial Release & PyPI Publishing
+
+The template can automatically trigger a v0.0.0 release that publishes to PyPI:
+
+**Step 1: Set up PyPI Pending Trusted Publisher (before generating)**
+
+1. Go to https://pypi.org/manage/account/publishing/
+2. Add a "pending publisher" with:
+   - **PyPI Project Name:** `your-project-slug` (e.g., `legal-mcp`)
+   - **Owner:** Your GitHub username (e.g., `l4b4r4b4b4`)
+   - **Repository:** Same as project slug (e.g., `legal-mcp`)
+   - **Workflow name:** `publish.yml`
+   - **Environment:** `pypi` (or leave blank)
+
+**Step 2: Generate with initial release enabled**
+
+```bash
+cookiecutter gh:l4b4r4b4b4/fastmcp-template --no-input \
+  project_name="Legal MCP" \
+  template_variant=minimal \
+  github_username="$(gh api user --jq .login)" \
+  author_name="$(gh api user --jq .name)" \
+  author_email="$(gh api user --jq .email)" \
+  trigger_initial_release=yes
+```
+
+**What happens:**
+1. Project is generated
+2. GitHub repository is created (public)
+3. Branch protection ruleset is configured
+4. `v0.0.0` tag is created and pushed
+5. Release workflow triggers → publishes to PyPI automatically
+
+**Requirements:**
+- Public repository (PyPI trusted publishers require public repos)
+- Pending trusted publisher configured on PyPI
+- `gh` CLI authenticated
+
+### Branch Protection
+
+The template automatically sets up a branch protection ruleset for `main` with:
+
+- ✅ **Pull request required** - No direct pushes to main
+- ✅ **Required status checks** - Must pass before merge:
+  - Lint & Format
+  - Test (Python 3.12)
+  - Test (Python 3.13)
+  - Security Scan
+  - CI Success
+- ✅ **No force pushes** - Protects commit history
+
+This provides a solid foundation for DevOps workflows. You can extend it later with:
+- Additional branches (develop, staging, production)
+- Required reviewers
+- Code owner reviews
+- Deployment environments
+
+View/edit rulesets: `https://github.com/<username>/<repo>/settings/rules`
+
+**If you skip the initial release**, you can trigger it manually later:
+```bash
+git tag -a v0.0.0 -m "Initial release - validates release pipeline"
+git push origin v0.0.0
+```
+
 ## Features
 
 ### Reference-Based Caching (RefCache)
