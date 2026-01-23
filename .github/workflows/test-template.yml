@@ -3,8 +3,18 @@ name: Test Template
 on:
   push:
     branches: [main]
+    paths:
+      - "{{cookiecutter.project_slug}}/**"
+      - "cookiecutter.json"
+      - "hooks/**"
+      - ".github/workflows/test-template.yml"
   pull_request:
     branches: [main]
+    paths:
+      - "{{cookiecutter.project_slug}}/**"
+      - "cookiecutter.json"
+      - "hooks/**"
+      - ".github/workflows/test-template.yml"
   workflow_dispatch:
 
 jobs:
