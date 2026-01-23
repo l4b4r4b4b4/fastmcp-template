@@ -99,7 +99,20 @@ jobs:
         env:
           GH_TOKEN: {% raw %}${{ secrets.GITHUB_TOKEN }}{% endraw %}
         run: |
-          echo "Tag push detected - verifying CI passed for this commit"
+          TAG_NAME="{% raw %}${{ github.ref_name }}{% endraw %}"
+          echo "Tag push detected: $TAG_NAME"
+
+          # Skip CI check for initial v0.0.0 release (bootstrapping)
+          # This allows the cookiecutter template to trigger the first release
+          # immediately after project creation, before CI has a chance to run.
+          if [[ "$TAG_NAME" == "v0.0.0" ]]; then
+            echo "✅ Initial v0.0.0 release - skipping CI check (bootstrap mode)"
+            echo ""
+            echo "Note: Future releases (v0.0.1+) will require CI to pass first."
+            exit 0
+          fi
+
+          echo "Verifying CI passed for this commit..."
 
           # Query GitHub API for CI workflow status on this commit
           CI_STATUS=$(gh api repos/{% raw %}${{ github.repository }}{% endraw %}/commits/{% raw %}${{ github.sha }}{% endraw %}/check-runs \
