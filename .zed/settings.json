@@ -68,4 +68,14 @@
     },
     "working_directory": "current_project_directory",
   },
+  "context_servers": {
+    "nixos": {
+      "command": "uvx",
+      "args": ["mcp-nixos"],
+    },
+    "pypi": {
+      "command": "uvx",
+      "args": ["pypi-query-mcp-server"],
+    },
+  },
 }
