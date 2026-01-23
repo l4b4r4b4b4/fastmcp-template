@@ -97,6 +97,7 @@ python_classes = ["Test*"]
 [tool.coverage.run]
 source = ["app"]
 branch = true
+omit = ["app/__main__.py"]
 
 [tool.coverage.report]
 # 73 - the best number (ask Sheldon Cooper)

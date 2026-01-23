@@ -10,7 +10,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from app.server import cache, mcp
-{% if use_langfuse %}
+{%- if use_langfuse %}
 from app.tracing import (
     MockContext,
     enable_test_mode,
@@ -18,7 +18,7 @@ from app.tracing import (
     is_langfuse_enabled,
     is_test_mode_enabled,
 )
-{% endif %}
+{%- endif %}
 
 
 class TestServerInitialization:
@@ -34,8 +34,9 @@ class TestServerInitialization:
         assert cache is not None
         assert cache.name == "{{ cookiecutter.project_slug }}"
 
+{%- if use_demo_tools %}
 
-{% if use_demo_tools %}
+
 class TestHelloTool:
     """Tests for the hello tool."""
 
@@ -58,10 +59,11 @@ class TestHelloTool:
         """Test hello with custom name."""
         result = self._call_hello("Alice")
         assert result["message"] == "Hello, Alice!"
-{% endif %}
+{%- endif %}
+
+{%- if use_langfuse %}
 
 
-{% if use_langfuse %}
 class TestTracingModule:
     """Tests for the tracing module."""
 
@@ -142,10 +144,8 @@ class TestTracingModule:
         attrs = get_langfuse_attributes(operation="cache_set")
         assert attrs["metadata"]["operation"] == "cache_set"
         assert "cacheset" in attrs["tags"]
-{% endif %}
 
 
-{% if use_langfuse %}
 class TestContextManagementTools:
     """Tests for context management tools."""
 
@@ -238,7 +238,7 @@ class TestContextManagementTools:
         assert "secret_key_set" in result
         assert "test_mode_enabled" in result
         assert "langfuse_attributes" in result
-{% endif %}
+{%- endif %}
 
 
 class TestHealthCheck:
@@ -286,15 +286,16 @@ class TestMCPConfiguration:
     def test_instructions_mention_caching(self) -> None:
         """Test that instructions mention caching."""
         assert "cach" in mcp.instructions.lower()
+{%- if use_secret_tools %}
 
-{% if use_secret_tools %}
     def test_instructions_mention_secret(self) -> None:
         """Test that instructions mention secret computation."""
         assert "secret" in mcp.instructions.lower()
-{% endif %}
+{%- endif %}
+
+{%- if use_demo_tools %}
 
 
-{% if use_demo_tools %}
 class TestGenerateItems:
     """Tests for the generate_items tool."""
 
@@ -367,10 +368,11 @@ class TestGenerateItems:
                 assert "id" in item
                 assert "name" in item
                 assert "value" in item
-{% endif %}
+{%- endif %}
+
+{%- if use_secret_tools %}
 
 
-{% if use_secret_tools %}
 class TestStoreSecret:
     """Tests for the store_secret tool."""
 
@@ -499,7 +501,7 @@ class TestComputeWithSecret:
         """Test that invalid reference raises error."""
         with pytest.raises(ValueError, match="not found"):
             self._call_compute_with_secret("invalid:ref:id", multiplier=1.0)
-{% endif %}
+{%- endif %}
 
 
 class TestGetCachedResult:
@@ -511,8 +513,8 @@ class TestGetCachedResult:
         cache.clear()
         yield
         cache.clear()
+{%- if use_secret_tools %}
 
-{% if use_secret_tools %}
     def _call_store_secret(self, name: str, value: float) -> dict:
         """Helper to store a value in cache."""
         from app import server
@@ -521,7 +523,7 @@ class TestGetCachedResult:
         if hasattr(store_fn, "fn"):
             return store_fn.fn(name, value)
         return store_fn(name, value)
-{% endif %}
+{%- endif %}
 
     async def _call_get_cached_result(
         self,
@@ -545,8 +547,8 @@ class TestGetCachedResult:
 
         assert "error" in result
         assert result["ref_id"] == "nonexistent:ref"
+{%- if use_secret_tools %}
 
-{% if use_secret_tools %}
     @pytest.mark.asyncio
     async def test_get_cached_result_with_valid_ref(self) -> None:
         """Test getting a cached result with valid reference."""
@@ -559,7 +561,7 @@ class TestGetCachedResult:
 
         # Should return either data or permission error (agent can't read secrets)
         assert "ref_id" in result
-{% endif %}
+{%- endif %}
 
     @pytest.mark.asyncio
     async def test_get_cached_result_not_found(self) -> None:
@@ -641,8 +643,8 @@ class TestTyperCLI:
 
 class TestPydanticModels:
     """Tests for Pydantic input models."""
+{%- if use_demo_tools %}
 
-{% if use_demo_tools %}
     def test_item_generation_input_defaults(self) -> None:
         """Test ItemGenerationInput default values."""
         from app.tools.demo import ItemGenerationInput
@@ -670,9 +672,9 @@ class TestPydanticModels:
 
         with pytest.raises(ValidationError):
             ItemGenerationInput(count=20000)  # Above maximum
-{% endif %}
+{%- endif %}
+{%- if use_secret_tools %}
 
-{% if use_secret_tools %}
     def test_secret_input(self) -> None:
         """Test SecretInput model."""
         from app.tools.secrets import SecretInput
@@ -704,7 +706,7 @@ class TestPydanticModels:
 
         model = SecretComputeInput(secret_ref="ref:456")
         assert model.multiplier == 1.0
-{% endif %}
+{%- endif %}
 
     def test_cache_query_input(self) -> None:
         """Test CacheQueryInput model."""
@@ -742,8 +744,8 @@ class TestTemplateGuidePrompt:
         result = self._call_template_guide()
         assert isinstance(result, str)
         assert len(result) > 0
+{%- if use_demo_tools %}
 
-{% if use_demo_tools %}
     def test_template_guide_mentions_hello(self) -> None:
         """Test that guide mentions hello tool."""
         result = self._call_template_guide()
@@ -753,16 +755,16 @@ class TestTemplateGuidePrompt:
         """Test that guide mentions generate_items tool."""
         result = self._call_template_guide()
         assert "generate_items" in result
-{% endif %}
+{%- endif %}
 
     def test_template_guide_mentions_pagination(self) -> None:
         """Test that guide mentions pagination."""
         result = self._call_template_guide()
         assert "paginate" in result.lower() or "page" in result.lower()
+{%- if use_secret_tools %}
 
-{% if use_secret_tools %}
     def test_template_guide_mentions_secret(self) -> None:
         """Test that guide mentions secret computation."""
         result = self._call_template_guide()
         assert "secret" in result.lower()
-{% endif %}
+{%- endif %}

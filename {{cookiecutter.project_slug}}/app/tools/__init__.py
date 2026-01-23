@@ -6,13 +6,15 @@
 This module re-exports all tools from submodules for convenient access.
 
 Tool Modules:
-{% if use_demo_tools %}
+{%- if use_demo_tools %}
 - demo: Simple demonstration tools (hello, generate_items)
-{% endif %}
+{%- endif %}
+{%- if use_langfuse %}
 - context: Langfuse test context management
-{% if use_secret_tools %}
+{%- endif %}
+{%- if use_secret_tools %}
 - secrets: Private computation with secrets
-{% endif %}
+{%- endif %}
 - cache: Cache query and retrieval
 - health: Health check functionality
 """
@@ -20,48 +22,56 @@ Tool Modules:
 from __future__ import annotations
 
 from app.tools.cache import CacheQueryInput, create_get_cached_result
+{%- if use_langfuse %}
 from app.tools.context import (
     enable_test_context,
     get_trace_info,
     reset_test_context,
     set_test_context,
 )
-{% if use_demo_tools %}
+{%- endif %}
+{%- if use_demo_tools %}
 from app.tools.demo import ItemGenerationInput, generate_items, hello
-{% endif %}
+{%- endif %}
 from app.tools.health import create_health_check
-{% if use_secret_tools %}
+{%- if use_secret_tools %}
 from app.tools.secrets import (
     SecretComputeInput,
     SecretInput,
     create_compute_with_secret,
     create_store_secret,
 )
-{% endif %}
+{%- endif %}
 
 __all__ = [
     "CacheQueryInput",
-{% if use_demo_tools %}
+{%- if use_demo_tools %}
     "ItemGenerationInput",
-{% endif %}
-{% if use_secret_tools %}
+{%- endif %}
+{%- if use_secret_tools %}
     "SecretComputeInput",
     "SecretInput",
     "create_compute_with_secret",
-{% endif %}
+{%- endif %}
     "create_get_cached_result",
     "create_health_check",
-{% if use_secret_tools %}
+{%- if use_secret_tools %}
     "create_store_secret",
-{% endif %}
+{%- endif %}
+{%- if use_langfuse %}
     "enable_test_context",
-{% if use_demo_tools %}
+{%- endif %}
+{%- if use_demo_tools %}
     "generate_items",
-{% endif %}
+{%- endif %}
+{%- if use_langfuse %}
     "get_trace_info",
-{% if use_demo_tools %}
+{%- endif %}
+{%- if use_demo_tools %}
     "hello",
-{% endif %}
+{%- endif %}
+{%- if use_langfuse %}
     "reset_test_context",
     "set_test_context",
+{%- endif %}
 ]
