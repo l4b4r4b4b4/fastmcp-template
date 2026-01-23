@@ -32,29 +32,42 @@ from typing import Any
 from fastmcp import FastMCP
 from mcp_refcache import PreviewConfig, PreviewStrategy, RefCache
 from mcp_refcache.fastmcp import cache_instructions, register_admin_tools
+{%- if use_langfuse %}
 
 from app.prompts import langfuse_guide, template_guide
+{%- else %}
+
+from app.prompts import template_guide
+{%- endif %}
 from app.tools import (
+{%- if use_secret_tools %}
+    create_compute_with_secret,
+{%- endif %}
     create_get_cached_result,
     create_health_check,
-{% if use_secret_tools %}
-    create_compute_with_secret,
+{%- if use_secret_tools %}
     create_store_secret,
-{% endif %}
-{% if use_langfuse %}
+{%- endif %}
+{%- if use_langfuse %}
     enable_test_context,
+{%- endif %}
+{%- if use_demo_tools %}
+    generate_items,
+{%- endif %}
+{%- if use_langfuse %}
     get_trace_info,
+{%- endif %}
+{%- if use_demo_tools %}
+    hello,
+{%- endif %}
+{%- if use_langfuse %}
     reset_test_context,
     set_test_context,
-{% endif %}
-{% if use_demo_tools %}
-    generate_items,
-    hello,
-{% endif %}
+{%- endif %}
 )
-{% if use_langfuse %}
+{%- if use_langfuse %}
 from app.tracing import TracedRefCache
-{% endif %}
+{%- endif %}
 
 # =============================================================================
 # Initialize FastMCP Server
@@ -96,7 +109,6 @@ Available tools:
 
 # =============================================================================
 # Initialize RefCache{% if use_langfuse %} with Langfuse Tracing{% endif %}
-
 # =============================================================================
 
 # Create the base RefCache instance
@@ -108,14 +120,15 @@ _cache = RefCache(
         default_strategy=PreviewStrategy.SAMPLE,  # Sample large collections
     ),
 )
+{%- if use_langfuse %}
 
-{% if use_langfuse %}
 # Wrap with TracedRefCache for Langfuse observability
 cache = TracedRefCache(_cache)
-{% else %}
+{%- else %}
+
 # Use RefCache directly (no tracing)
 cache = _cache
-{% endif %}
+{%- endif %}
 
 # =============================================================================
 # Create Bound Tool Functions
@@ -123,18 +136,18 @@ cache = _cache
 
 # These are created with factory functions and bound to the cache instance.
 # We keep references for testing and re-export them as module attributes.
-{% if use_secret_tools %}
+{%- if use_secret_tools %}
 store_secret = create_store_secret(cache)
 compute_with_secret = create_compute_with_secret(cache)
-{% endif %}
+{%- endif %}
 get_cached_result = create_get_cached_result(cache)
 health_check = create_health_check(_cache)
 
 # =============================================================================
 # Register Tools
 # =============================================================================
+{%- if use_demo_tools %}
 
-{% if use_demo_tools %}
 # Demo tools
 mcp.tool(hello)
 
@@ -171,22 +184,21 @@ async def _generate_items(
     """
     items = await generate_items(count=count, prefix=prefix)
     return items  # type: ignore[return-value]  # decorator transforms to dict
-
-
 {% endif %}
-{% if use_langfuse %}
+{%- if use_langfuse %}
+
 # Context management tools
 mcp.tool(enable_test_context)
 mcp.tool(set_test_context)
 mcp.tool(reset_test_context)
 mcp.tool(get_trace_info)
+{%- endif %}
 
-{% endif %}
 # Cache-bound tools (using pre-created module-level functions)
-{% if use_secret_tools %}
+{%- if use_secret_tools %}
 mcp.tool(store_secret)
 mcp.tool(compute_with_secret)
-{% endif %}
+{%- endif %}
 mcp.tool(get_cached_result)
 mcp.tool(health_check)
 
@@ -222,11 +234,11 @@ _admin_tools = register_admin_tools(
 def _template_guide() -> str:
     """Guide for using this MCP server template."""
     return template_guide()
+{%- if use_langfuse %}
 
-{% if use_langfuse %}
 
 @mcp.prompt
 def _langfuse_guide() -> str:
     """Guide for using Langfuse tracing with this server."""
     return langfuse_guide()
-{% endif %}
+{%- endif %}

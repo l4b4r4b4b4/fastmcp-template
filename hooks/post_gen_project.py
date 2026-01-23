@@ -63,6 +63,20 @@ def check_command_exists(cmd: str) -> bool:
         return False
 
 
+def remove_file(path: Path) -> None:
+    """Remove a file if it exists."""
+    if path.exists():
+        path.unlink()
+
+
+def remove_dir(path: Path) -> None:
+    """Remove a directory and its contents if it exists."""
+    if path.exists():
+        import shutil
+
+        shutil.rmtree(path)
+
+
 def main() -> None:
     """Run post-generation setup tasks."""
     project_slug = "{{ cookiecutter.project_slug }}"
@@ -74,9 +88,35 @@ def main() -> None:
     github_username = "{{ cookiecutter.github_username }}"
     trigger_initial_release = "{{ cookiecutter.trigger_initial_release }}"
 
+    # Feature flags based on template variant
+    template_variant = "{{ cookiecutter.template_variant }}"
+    include_demo_tools = "{{ cookiecutter.include_demo_tools }}"
+    include_secret_tools = "{{ cookiecutter.include_secret_tools }}"
+    include_langfuse = "{{ cookiecutter.include_langfuse }}"
+
+    # Compute effective feature flags
+    use_demo_tools = template_variant == "full" or (
+        template_variant == "custom" and include_demo_tools == "yes"
+    )
+    use_secret_tools = template_variant == "full" or (
+        template_variant == "custom" and include_secret_tools == "yes"
+    )
+    use_langfuse = template_variant in ["standard", "full"] or (
+        template_variant == "custom" and include_langfuse == "yes"
+    )
+
     print("\n" + "=" * 70)
     print(f"Setting up '{project_name}'...")
     print("=" * 70 + "\n")
+
+    # Task 0: Remove unused feature files
+    cwd = Path.cwd()
+    if not use_demo_tools:
+        remove_file(cwd / "app" / "tools" / "demo.py")
+    if not use_secret_tools:
+        remove_file(cwd / "app" / "tools" / "secrets.py")
+    if not use_langfuse:
+        remove_file(cwd / "app" / "tools" / "context.py")
 
     # Track overall success
     warnings = []
